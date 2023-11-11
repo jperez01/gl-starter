@@ -11,7 +11,8 @@
 #include <unordered_map>
 #include <memory>
 
-#include "gl_types.h"
+#include "types.h"
+#include "material.h"
 
 struct NodeData {
     glm::mat4 transformation;
@@ -24,14 +25,14 @@ struct Mesh {
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
 
-    std::vector<Texture> textures;
-    std::vector<std::string> texture_paths;
+    size_t materialIndex;
 
     std::unordered_map<std::string, unsigned int> boneName_To_Index;
     std::vector<VertexBoneData> bone_data;
     std::vector<BoneInfo> bone_info;
 
-    glm::mat4 globalInverse;
+    glm::mat4 model_matrix;
+    BoundingBox aabb;
 
     AllocatedBuffer buffer;
     unsigned int SSBO;
@@ -54,14 +55,17 @@ glm::mat4 convertMatrix(const aiMatrix4x4& aiMat);
 
 class Model {
     public:
-        std::vector<Texture> textures_loaded;
+        std::unordered_map<std::string, Texture> textures_loaded;
         std::vector<Mesh> meshes;
         std::vector<NodeData> nodes;
+
+        std::vector<Material> materials_loaded;
 
         std::string directory;
         bool gammaCorrection;
         glm::mat4 model_matrix;
         BoundingBox aabb;
+        bool shouldDraw = true;
         int numAnimations = 0;
 
         const aiScene* scene;

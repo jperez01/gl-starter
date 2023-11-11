@@ -1,4 +1,4 @@
-#include "gl_types.h"
+#include "types.h"
 
 void addBoneData(VertexBoneData& data, unsigned int boneID, float weight) {
     for (unsigned int i = 0; i < MAX_BONES_PER_VERTEX; i++) {

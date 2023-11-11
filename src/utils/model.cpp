@@ -1,4 +1,4 @@
-#include "gl_model.h"
+#include "model.h"
 
 #include <iostream>
 #include <glm/gtx/quaternion.hpp>
@@ -163,6 +163,7 @@ void Model::loadInfo(std::string path, FileType type) {
     }
     directory = path.substr(0, path.find_last_of('/'));
     numAnimations = scene->mNumAnimations;
+    materials_loaded.resize(scene->mNumMaterials);
 
     processNode(scene->mRootNode, scene);
     scene = importer.GetOrphanedScene();
@@ -193,6 +194,7 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
     std::vector<VertexBoneData> boneData;
     std::vector<BoneInfo> boneInfo;
     std::unordered_map<std::string, unsigned int> nameToIndex;
+    BoundingBox someAABB;
 
     for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
         Vertex vertex;
@@ -204,21 +206,21 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
         vector.z = mesh->mVertices[i].z;
         vertex.Position = vector;
 
-        if (!aabb.isInitialized) {
-            aabb.isInitialized = true;
-            aabb.minPoint = glm::vec4(vector, 1.0f);
-            aabb.maxPoint = glm::vec4(vector, 1.0f);
-        } else {
-            aabb.minPoint = glm::vec4(
-                std::min(aabb.minPoint.x, vector.x),
-                std::min(aabb.minPoint.y, vector.y),
-                std::min(aabb.minPoint.z, vector.z),
+        if (i == 0) {
+            someAABB.minPoint = glm::vec4(vector, 1.0f);
+            someAABB.maxPoint = glm::vec4(vector, 1.0f);
+        }
+        else {
+            someAABB.minPoint = glm::vec4(
+                std::min(someAABB.minPoint.x, vector.x),
+                std::min(someAABB.minPoint.y, vector.y),
+                std::min(someAABB.minPoint.z, vector.z),
                 1.0f
             );
-            aabb.maxPoint = glm::vec4(
-                std::max(aabb.maxPoint.x, vector.x),
-                std::max(aabb.maxPoint.y, vector.y),
-                std::max(aabb.maxPoint.z, vector.z),
+            someAABB.maxPoint = glm::vec4(
+                std::max(someAABB.maxPoint.x, vector.x),
+                std::max(someAABB.maxPoint.y, vector.y),
+                std::max(someAABB.maxPoint.z, vector.z),
                 1.0f
             );
         }
@@ -252,6 +254,26 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
         vertices.push_back(vertex);
     }
 
+    if (!aabb.isInitialized) {
+        aabb.isInitialized = true;
+        aabb.minPoint = someAABB.minPoint;
+        aabb.maxPoint = someAABB.maxPoint;
+    }
+    else {
+        aabb.minPoint = glm::vec4(
+            std::min(someAABB.minPoint.x, aabb.minPoint.x),
+            std::min(someAABB.minPoint.y, aabb.minPoint.y),
+            std::min(someAABB.minPoint.z, aabb.minPoint.z),
+            1.0f
+        );
+        aabb.maxPoint = glm::vec4(
+            std::max(someAABB.maxPoint.x, aabb.maxPoint.x),
+            std::max(someAABB.maxPoint.y, aabb.maxPoint.y),
+            std::max(someAABB.maxPoint.z, aabb.maxPoint.z),
+            1.0f
+        );
+    }
+
     if(mesh->HasBones()) {
         boneData.resize(vertices.size());
         boneInfo.resize(mesh->mNumBones);
@@ -274,45 +296,52 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
         for (unsigned int j = 0; j < face.mNumIndices; j++)
             indices.push_back(face.mIndices[j]);
     }
-    aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
-
-    std::vector<std::string> diffuseMaps = loadMaterialTextures(material,
-        aiTextureType_DIFFUSE, "texture_diffuse");
-    textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
-
-    std::vector<std::string> specularMaps = loadMaterialTextures(material,
-        aiTextureType_SPECULAR, "texture_specular");
-    textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
-
-    std::vector<std::string> normalMaps = loadMaterialTextures(material,
-        aiTextureType_NORMALS, "texture_normal");
-    textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
-
-    std::vector<std::string> heightMaps = loadMaterialTextures(material,
-        aiTextureType_AMBIENT, "texture_height");
-    textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
-
-    std::vector<std::string> aoMaps = loadMaterialTextures(material,
-        aiTextureType_LIGHTMAP, "texture_ao");
-    textures.insert(textures.end(), aoMaps.begin(), aoMaps.end());
-
-    std::vector<std::string> metallicMaps = loadMaterialTextures(material,
-        aiTextureType_METALNESS, "texture_metallic");
-    textures.insert(textures.end(), metallicMaps.begin(), metallicMaps.end());
-
-    std::vector<std::string> roughnessMaps = loadMaterialTextures(material,
-        aiTextureType_DIFFUSE_ROUGHNESS, "texture_roughness");
-    textures.insert(textures.end(), roughnessMaps.begin(), roughnessMaps.end());
-
     Mesh newMesh;
+
+    Material& loadedMaterial = materials_loaded.at(mesh->mMaterialIndex);
+    if (loadedMaterial.texture_paths.size() == 0) {
+        aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+
+        std::vector<std::string> diffuseMaps = loadMaterialTextures(material,
+            aiTextureType_DIFFUSE, "texture_diffuse");
+        textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
+
+        std::vector<std::string> specularMaps = loadMaterialTextures(material,
+            aiTextureType_SPECULAR, "texture_specular");
+        textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
+
+        std::vector<std::string> normalMaps = loadMaterialTextures(material,
+            aiTextureType_NORMALS, "texture_normal");
+        textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
+
+        std::vector<std::string> heightMaps = loadMaterialTextures(material,
+            aiTextureType_AMBIENT, "texture_height");
+        textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
+
+        std::vector<std::string> aoMaps = loadMaterialTextures(material,
+            aiTextureType_LIGHTMAP, "texture_ao");
+        textures.insert(textures.end(), aoMaps.begin(), aoMaps.end());
+
+        std::vector<std::string> metallicMaps = loadMaterialTextures(material,
+            aiTextureType_METALNESS, "texture_metallic");
+        textures.insert(textures.end(), metallicMaps.begin(), metallicMaps.end());
+
+        std::vector<std::string> roughnessMaps = loadMaterialTextures(material,
+            aiTextureType_DIFFUSE_ROUGHNESS, "texture_roughness");
+        textures.insert(textures.end(), roughnessMaps.begin(), roughnessMaps.end());
+
+        loadedMaterial.texture_paths = textures;
+    }
+    newMesh.materialIndex = mesh->mMaterialIndex;
+
+    newMesh.aabb = someAABB;
+    newMesh.model_matrix = glm::mat4(1.0f);
     newMesh.indices = indices;
     newMesh.vertices = vertices;
-    newMesh.texture_paths = textures;
+
     newMesh.bone_data = boneData;
     newMesh.bone_info = boneInfo;
     newMesh.boneName_To_Index = nameToIndex;
-    glm::mat4 globalTransform = glm::mat4(1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0);
-    newMesh.globalInverse = glm::inverse(globalTransform);
     
     return newMesh;
 }
@@ -326,15 +355,8 @@ std::vector<std::string> Model::loadMaterialTextures(aiMaterial *mat, aiTextureT
         mat->GetTexture(type, i, &str);
         bool skip = false;
 
-        for (unsigned int j = 0; j < textures_loaded.size(); j++) {
-            if (std::strcmp(textures_loaded[j].path.data(), str.C_Str()) == 0) {
-                textures.push_back(textures_loaded[j].path);
-                skip = true;
-                break;
-            }
-        }
-
-        if (!skip) {
+        auto iterator = textures_loaded.find(str.C_Str());
+        if (iterator == textures_loaded.end()) {
             Texture texture;
             bool success = false;
 
@@ -349,8 +371,11 @@ std::vector<std::string> Model::loadMaterialTextures(aiMaterial *mat, aiTextureT
                 texture.type = typeName;
                 texture.path = str.C_Str();
                 textures.push_back(texture.path);
-                textures_loaded.push_back(texture);
+                textures_loaded[texture.path] = texture;
             }
+        }
+        else {
+            textures.push_back(iterator->second.path);
         }
     }
 
