@@ -1,33 +1,35 @@
 add_library(gl_tools
-    engine/gl_base_engine.h
-    engine/gl_base_engine.cpp
+    core/application.cpp
 
-    utils/gl_funcs.h
-    utils/gl_funcs.cpp
-    utils/camera.h
+    engine/base_engine.cpp
+    engine/gl_engine.cpp
+
+    ui/editor.cpp
+    ui/ui.cpp
+
+    utils/functions.cpp
     utils/camera.cpp
-    utils/gl_model.h
-    utils/gl_model.cpp
-    utils/shader.h
+    utils/model.cpp
     utils/shader.cpp
-    utils/gl_types.h
-    utils/gl_types.cpp
-    utils/gl_compute.h
-    utils/gl_compute.cpp)
+    utils/types.cpp
+    utils/compute.cpp
+)
 
-add_executable(gl_engine
-    main.cpp)
+add_executable(demo
+    exes/main.cpp)
 
 target_include_directories(gl_tools PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${PROJECT_SOURCE_DIR}/include)
 
-target_include_directories(gl_engine PUBLIC 
+target_include_directories(demo PUBLIC 
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${PROJECT_SOURCE_DIR}/include)
 
-set (GLFW_LIB "${PROJECT_SOURCE_DIR}/libs/GLFW/glfw3.lib")
-set (ASSIMP_LIB "${PROJECT_SOURCE_DIR}/libs/assimp/assimp.lib")
-target_link_libraries(gl_tools glad glm stb_image imgui imGuizmo sdl2 ${GLFW_LIB} ${ASSIMP_LIB})
+# Assimp from vcpkg or other package manager
+find_package(assimp CONFIG REQUIRED)
+find_package(SDL2 REQUIRED COMPONENTS SDL2)
 
-target_link_libraries(gl_engine gl_tools)
+target_link_libraries(gl_tools glad glm stb_image imgui imGuizmo SDL2::SDL2 assimp::assimp)
+
+target_link_libraries(demo gl_tools)

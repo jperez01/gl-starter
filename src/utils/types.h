@@ -6,6 +6,12 @@
 #include <string>
 #include <unordered_map>
 
+struct SimpleDirectionalLight {
+    glm::vec3 direction;
+
+    glm::vec3 color;
+};
+
 struct DirLight {
     glm::vec3 direction;
 
@@ -48,7 +54,7 @@ struct Vertex {
 };
 
 struct Texture {
-    unsigned int id;
+    unsigned int id = -1;
     std::string type;
     std::string path;
 
