@@ -6,6 +6,22 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <vector>
+#include "types.h"
+
+struct FrustumPlane {
+    glm::vec3 point;
+    glm::vec3 normal;
+};
+
+struct Frustum {
+    std::vector<FrustumPlane> allPlanes;
+
+    bool isInside(glm::vec4& maxPoint, glm::vec4& minPoint);
+};
+
+enum ProjectionType {
+    PERSPECTIVE, ORTHOGRAPHIC
+};
 
 // Defines several possible options for camera movement. Used as abstraction to stay away from window-system specific input methods
 enum Camera_Movement {
@@ -41,6 +57,10 @@ public:
     float MouseSensitivity;
     float Zoom;
 
+    bool shouldUseRadar = false;
+    Frustum frustum;
+    float zNear = 1.0f, zFar = 100.0f, aspect = 1.0f, fovY = glm::radians(90.0f);
+
     // constructor with vectors
     Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), 
         glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH);
@@ -50,6 +70,7 @@ public:
 
     // returns the view matrix calculated using Euler Angles and the LookAt Matrix
     glm::mat4 getViewMatrix();
+    glm::mat4 getProjectionMatrix(ProjectionType type = PERSPECTIVE);
 
     // processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
     void processKeyboard(Camera_Movement direction, float deltaTime);
@@ -60,8 +81,12 @@ public:
     // processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
     void processMouseScroll(float yoffset);
 
+    bool isInsideFrustum(glm::vec4& maxPoint, glm::vec4& minPoint);
+    bool radarInsideFrustum(glm::vec4& maxPoint, glm::vec4& minPoint);
+
 private:
     // calculates the front vector from the Camera's (updated) Euler Angles
     void updateCameraVectors();
+    void updateFrustum();
 };
 #endif

@@ -1,4 +1,4 @@
-#include "gl_funcs.h"
+#include "functions.h"
 #include "stb_image.h"
 
 #include <glad/glad.h>
@@ -55,6 +55,7 @@ namespace glutil {
         std::vector<float> newSkyboxVertices(std::begin(skyboxVertices), std::end(skyboxVertices));
         return glutil::loadVertexBuffer(newSkyboxVertices, parameters);
     }
+
     AllocatedBuffer createScreenQuad() {
         AllocatedBuffer quadBuffer;
         float quadVertices[] = {
@@ -133,6 +134,51 @@ namespace glutil {
         }
     }
 
+    Texture loadSomeTexture(std::string path) {
+        Texture texture;
+        int width, height, nrComponents;
+
+        unsigned char* data = stbi_load(path.c_str(), &width, &height, &nrComponents, 0);
+        if (data) {
+            GLenum dataType = GL_UNSIGNED_BYTE;
+            unsigned int textureID = createTexture(width, height, dataType, nrComponents, data);
+            
+            texture.id = textureID;
+            texture.height = height;
+            texture.width = width;
+            texture.nrComponents = nrComponents;
+
+            return texture;
+        }
+        else {
+            std::cout << "Texture failed to load at path: " << path << std::endl;
+            stbi_image_free(data);
+
+            return texture;
+        }
+    }
+
+    unsigned int createTexture3D(int width, int height, int depth, GLenum storageFormat) {
+        unsigned int textureID;
+
+        glCreateTextures(GL_TEXTURE_3D, 1, &textureID);
+
+        glTextureParameteri(textureID, GL_TEXTURE_WRAP_R, GL_REPEAT);
+        glTextureParameteri(textureID, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTextureParameteri(textureID, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+        glTextureParameteri(textureID, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTextureParameteri(textureID, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+
+        const std::vector<GLfloat> someBuffer(4 * width * height * depth, 0.0f);
+
+        glTextureStorage3D(textureID, 6, storageFormat, width, height, depth);
+        glTextureSubImage3D(textureID, 0, 0, 0, 0, width, height, depth, GL_RGBA, GL_FLOAT, &someBuffer[0]);
+        glGenerateTextureMipmap(textureID);
+        
+        return textureID;
+    }
+
     unsigned int createTextureArray(int size, int width, int height, GLenum dataType, GLenum format, GLenum storageFormat, void* data) {
         unsigned int textureID;
         glCreateTextures(GL_TEXTURE_2D_ARRAY, 1, &textureID);
@@ -151,22 +197,23 @@ namespace glutil {
         return textureID;
     }
 
-    unsigned int createTexture(int width, int height, GLenum dataType, GLenum format, GLenum storageFormat, void* data) {
+    unsigned int createTexture(int width, int height, GLenum dataType, GLenum format, GLenum storageFormat, void* data, int levels) {
         unsigned int textureID;
         glCreateTextures(GL_TEXTURE_2D, 1, &textureID);
 
-        glTextureStorage2D(textureID, 1, storageFormat, width, height);
+        glTextureStorage2D(textureID, levels, storageFormat, width, height);
         glTextureSubImage2D(textureID, 0, 0, 0, width, height, format, dataType, data);
 
         glTextureParameteri(textureID, GL_TEXTURE_WRAP_S, GL_REPEAT);
         glTextureParameteri(textureID, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTextureParameteri(textureID, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTextureParameteri(textureID, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTextureParameteri(textureID, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTextureParameteri(textureID, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        if (levels > 1) glGenerateTextureMipmap(textureID);
 
         return textureID;
     }
 
-    unsigned int createTexture(int width, int height, GLenum dataType, int nrComponents, unsigned char* data) {
+    unsigned int createTexture(int width, int height, GLenum dataType, int nrComponents, unsigned char* data, int levels) {
         unsigned int textureID;
         glCreateTextures(GL_TEXTURE_2D, 1, &textureID);
 
@@ -186,13 +233,15 @@ namespace glutil {
             storageFormat = GL_RGBA8;
         }
 
-        glTextureStorage2D(textureID, 1, storageFormat, width, height);
+        glTextureStorage2D(textureID, levels, storageFormat, width, height);
         glTextureSubImage2D(textureID, 0, 0, 0, width, height, format, dataType, data);
 
         glTextureParameteri(textureID, GL_TEXTURE_WRAP_S, GL_REPEAT);
         glTextureParameteri(textureID, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTextureParameteri(textureID, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTextureParameteri(textureID, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTextureParameteri(textureID, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTextureParameteri(textureID, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+
+        if (levels > 1) glGenerateTextureMipmap(textureID);
 
         return textureID;
     }
@@ -276,36 +325,7 @@ namespace glutil {
 
         return textureID;
     }
-    /**
-     * AllocatedBuffer loadSimpleVertexBuffer(std::vector<float>& vertices, VertexType endpoint) {
-        int lengths[5] = { 3, 3, 2, 3, 3};
 
-        GLuint binding_index = 0;
-        unsigned int VAO, VBO;
-
-        glCreateVertexArrays(1, &VAO);
-
-        glCreateBuffers(1, &VBO);
-        glNamedBufferStorage(VBO, sizeof(float) * vertices.size(), vertices.data(), GL_DYNAMIC_STORAGE_BIT);
-
-        int totalLength = 0;
-        for (int i = 0; i <= endpoint; i++) {
-            glEnableVertexArrayAttrib(VAO, i);
-            glVertexArrayAttribFormat(VAO, i, lengths[i], GL_FLOAT, GL_FALSE, 0);
-            glVertexArrayAttribBinding(VAO, i, binding_index);
-
-            totalLength += lengths[i];
-        }
-
-        glVertexArrayVertexBuffer(VAO, binding_index, VBO, 0, sizeof(float) * totalLength);
-
-        AllocatedBuffer newBuffer;
-        newBuffer.VAO = VAO;
-        newBuffer.VBO = VBO;
-
-        return newBuffer;
-    }
-     */
     AllocatedBuffer loadVertexBuffer(std::vector<float>& vertices, std::vector<VertexType>& endpoints) {
         unsigned int VAO, VBO;
 
@@ -341,8 +361,6 @@ namespace glutil {
 
     AllocatedBuffer loadVertexBuffer(std::vector<float>& vertices, std::vector<unsigned int>& indices, 
         std::vector<VertexType>& endpoints) {
-
-        GLuint binding_index = 0;
         unsigned int VAO, VBO, EBO;
 
         glCreateVertexArrays(1, &VAO);
@@ -383,8 +401,6 @@ namespace glutil {
 
     AllocatedBuffer loadVertexBuffer(std::vector<Vertex>& vertices, std::vector<unsigned int>& indices, 
         std::vector<VertexType>& endpoints) {
-
-        GLuint binding_index = 0;
         unsigned int VAO, VBO, EBO;
 
         glCreateVertexArrays(1, &VAO);
