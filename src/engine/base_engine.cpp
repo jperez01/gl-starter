@@ -14,7 +14,9 @@
 #include "imgui/imgui_stdlib.h"
 #include "ImGuizmo.h"
 
-void GLEngine::init_resources() {}
+void GLEngine::init_resources() {
+    startTime = static_cast<float>(SDL_GetTicks());
+}
 void render(std::vector<Model>& objs) {}
 
 void GLEngine::drawModels(std::vector<Model>& models, Shader& shader, unsigned char drawOptions) {
@@ -113,5 +115,14 @@ void GLEngine::loadModelData(Model& model) {
             glNamedBufferStorage(mesh.SSBO, sizeof(VertexBoneData) * mesh.bone_data.size(),
                 mesh.bone_data.data(), GL_DYNAMIC_STORAGE_BIT);
         }
+    }
+}
+
+void GLEngine::checkFrustum(std::vector<Model>& objs) {
+    for (Model& model : objs) {
+        glm::vec4 transformedMax = model.model_matrix * model.aabb.maxPoint;
+        glm::vec4 transformedMin = model.model_matrix * model.aabb.minPoint;
+
+        model.shouldDraw = camera->isInsideFrustum(transformedMax, transformedMin);
     }
 }

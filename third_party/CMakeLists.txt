@@ -12,6 +12,8 @@ target_include_directories(stb_image INTERFACE stb_image)
 
 target_include_directories(glad PUBLIC ${PROJECT_SOURCE_DIR}/include)
 
+find_package(SDL2 REQUIRED COMPONENTS SDL2)
+
 add_library(sdl2 INTERFACE)
 set(sdl2_DIR "SDL_PATH" CACHE PATH "Path to SDL2")
 
@@ -42,7 +44,7 @@ target_sources(imgui PRIVATE
     imgui/imgui_impl_opengl3.cpp
     imgui/imgui_impl_sdl.cpp)
 
-target_link_libraries(imgui PUBLIC sdl2)
+target_link_libraries(imgui PUBLIC SDL2::SDL2)
 
 add_library(imGuizmo STATIC)
 target_include_directories(imGuizmo PUBLIC imGuizmo)

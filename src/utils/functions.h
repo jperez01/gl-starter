@@ -32,10 +32,6 @@ static std::vector<VertexType> basicEndpoints = {
 };
 
 namespace glutil {
-    AllocatedBuffer createUnitCube();
-    AllocatedBuffer createScreenQuad();
-    AllocatedBuffer createPlane();
-
     unsigned int loadFloatTexture(std::string path, GLenum format, GLenum storageFormat);
     unsigned int loadTexture(std::string path, GLenum dataType, GLenum format, GLenum storageFormat);
     unsigned int loadTexture(std::string path);

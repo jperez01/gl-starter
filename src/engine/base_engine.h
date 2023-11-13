@@ -9,7 +9,7 @@
 #include "utils/shader.h"
 #include "utils/camera.h"
 #include "utils/model.h"
-#include "utils/functions.h"
+#include "utils/common_primitives.h"
 
 #include "ui/editor.h"
 
@@ -22,52 +22,6 @@
 enum DrawOptions {
     SKIP_TEXTURES = (1u << 0),
     SKIP_CULLING = (1u << 1)
-};
-
-struct EnviornmentCubemap {
-    AllocatedBuffer buffer;
-    unsigned int texture;
-    Shader pipeline;
-
-    EnviornmentCubemap() {}
-
-    EnviornmentCubemap(std::string path) {
-        pipeline = Shader("cubemap/map.vs", "cubemap/map.fs");
-
-        buffer = glutil::createUnitCube();
-        texture = glutil::loadCubemap(path);
-    }
-
-    void draw(glm::mat4& projection, glm::mat4& view) {
-        glm::mat4 convertedView = glm::mat4(glm::mat3(view));
-        glDepthFunc(GL_LEQUAL);
-        pipeline.use();
-        pipeline.setMat4("projection", projection);
-        pipeline.setMat4("view", convertedView);
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, texture);
-        pipeline.setInt("skybox", 0);
-
-        glBindVertexArray(buffer.VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-        glDepthFunc(GL_LESS);
-    }
-};
-
-struct ScreenQuad {
-    AllocatedBuffer buffer;
-
-    ScreenQuad() {}
-
-    void init() {
-        buffer = glutil::createScreenQuad();
-    }
-
-    void draw() {
-        glBindVertexArray(buffer.VAO);
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-    }
 };
 
 class GLEngine {
@@ -85,9 +39,11 @@ public:
 protected:
     float shininess = 200.0f;
 
+    float startTime = 0.0f;
     float animationTime = 0.0f;
     int chosenAnimation = 0;
 
     void drawModels(std::vector<Model>& models, Shader& shader, unsigned char drawOptions = 0);
     void drawPlane();
+    void checkFrustum(std::vector<Model>& objs);
 };

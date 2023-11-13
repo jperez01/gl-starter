@@ -13,7 +13,7 @@ add_library(gl_tools
     utils/shader.cpp
     utils/types.cpp
     utils/compute.cpp
-)
+    utils/common_primitives.cpp)
 
 add_executable(demo
     exes/main.cpp)

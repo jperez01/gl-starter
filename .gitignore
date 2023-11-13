@@ -2,3 +2,6 @@
 /bin
 /resources
 /.vscode
+/.vs
+/out
+/CMakeSettings.json
