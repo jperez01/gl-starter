@@ -83,6 +83,7 @@ void Application::init()
     mRenderer->camera = &camera;
 
     mRenderer->init_resources();
+    mRenderer->subscribePrograms(updateListener);
 
     // asyncLoadModel("../../resources/objects/sponzaBasic/glTF/Sponza.gltf", GLTF);
 
@@ -97,6 +98,10 @@ void Application::init()
 
     mEditor.renderer = mRenderer;
     mEditor.objs = &usableObjs;
+
+    std::string path = "../../shaders/default";
+    efsw::WatchID watchID = fileWatcher.addWatch(path, &updateListener, true);
+    fileWatcher.watch();
 }
 
 void Application::cleanup()
@@ -117,6 +122,7 @@ void Application::mainLoop()
         deltaTime = currentFrame - lastFrame;
         deltaTime *= 0.01f;
         lastFrame = currentFrame;
+        updateListener.handleUpdates();
 
         handleEvents();
         handleImportedObjs();

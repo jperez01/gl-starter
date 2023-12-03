@@ -4,6 +4,7 @@
 #include <GLFW/glfw3.h>
 #include <SDL.h>
 #include <vector>
+#include <utils/file_watcher.h>
 
 #include "utils/types.h"
 #include "utils/shader.h"
@@ -27,6 +28,7 @@ enum DrawOptions {
 class GLEngine {
 public:
     virtual void init_resources();
+    virtual void subscribePrograms(UpdateListener& listener);
     virtual void render(std::vector<Model>& objs) = 0;
     virtual void handleImGui() = 0;
     virtual void handleObjs(std::vector<Model>& objs) {}
@@ -35,6 +37,8 @@ public:
 
     Camera* camera = nullptr;
     int WINDOW_WIDTH = 1920, WINDOW_HEIGHT = 1080;
+
+    ScreenQuad screenQuad;
 
 protected:
     float shininess = 200.0f;

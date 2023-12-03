@@ -9,9 +9,10 @@
 
 class RenderEngine : public GLEngine {
     public:
-        void init_resources();
-        void render(std::vector<Model>& objs);
-        void handleImGui();
+        void init_resources() override;
+    void subscribePrograms(UpdateListener& listener) override;
+        void render(std::vector<Model>& objs) override;
+        void handleImGui() override;
     
     private:
         ImGuizmo::OPERATION operation = ImGuizmo::OPERATION::TRANSLATE;
@@ -22,6 +23,8 @@ class RenderEngine : public GLEngine {
 
         AllocatedBuffer cubemapBuffer;
         unsigned int cubemapTexture;
+
+        Shader starterPipeline;
 
         void RenderEngine::renderScene(std::vector<Model>& objs, Shader& shader, bool skipTextures);
 };

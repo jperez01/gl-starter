@@ -3,6 +3,8 @@
 #define SDL_MAIN_HANDLED
 #include "engine/base_engine.h"
 
+#include "utils/file_watcher.h"
+
 class Application {
 public:
     Application(GLEngine *renderer);
@@ -44,6 +46,9 @@ private:
     std::vector<Model> usableObjs;
     int chosenObjIndex = 0;
     ImGuizmo::OPERATION operation = ImGuizmo::OPERATION::TRANSLATE;
+
+    efsw::FileWatcher fileWatcher;
+    UpdateListener updateListener;
 
     Camera camera;
     bool handleMouseMovement = true;

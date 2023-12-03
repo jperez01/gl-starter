@@ -17,6 +17,9 @@
 void GLEngine::init_resources() {
     startTime = static_cast<float>(SDL_GetTicks());
 }
+
+void GLEngine::subscribePrograms(UpdateListener&listener) {}
+
 void render(std::vector<Model>& objs) {}
 
 void GLEngine::drawModels(std::vector<Model>& models, Shader& shader, unsigned char drawOptions) {
