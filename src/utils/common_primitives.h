@@ -1,6 +1,6 @@
 #pragma once
 
-#include "utils/shader.h"
+#include "shader/shader.h"
 #include "utils/functions.h"
 
 namespace glutil {

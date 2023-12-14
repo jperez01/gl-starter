@@ -17,9 +17,11 @@
 void GLEngine::init_resources() {
     startTime = static_cast<float>(SDL_GetTicks());
 }
-void render(std::vector<Model>& objs) {}
 
-void GLEngine::drawModels(std::vector<Model>& models, Shader& shader, unsigned char drawOptions) {
+void GLEngine::subscribePrograms(UpdateListener&listener) {}
+void GLEngine::handleObjs(std::vector<Model>& objs) {}
+
+void GLEngine::drawModels(std::vector<Model>& models, Shader& shader, unsigned char drawOptions) const {
     bool shouldSkipTextures = drawOptions & SKIP_TEXTURES;
     bool shouldSkipCulling = drawOptions & SKIP_CULLING;
 
@@ -68,7 +70,7 @@ void GLEngine::drawModels(std::vector<Model>& models, Shader& shader, unsigned c
                 }
                 glActiveTexture(GL_TEXTURE0);
 
-                if (mesh.bone_data.size() != 0 && model.scene->mAnimations > 0) {
+                if (!mesh.bone_data.empty() && model.scene->mNumAnimations > 0) {
                     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, mesh.SSBO);
 
                     mesh.getBoneTransforms(animationTime, model.scene, model.nodes, chosenAnimation);
@@ -118,7 +120,7 @@ void GLEngine::loadModelData(Model& model) {
     }
 }
 
-void GLEngine::checkFrustum(std::vector<Model>& objs) {
+void GLEngine::checkFrustum(std::vector<Model>& objs) const {
     for (Model& model : objs) {
         glm::vec4 transformedMax = model.model_matrix * model.aabb.maxPoint;
         glm::vec4 transformedMin = model.model_matrix * model.aabb.minPoint;

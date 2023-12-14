@@ -45,6 +45,9 @@ private:
     int chosenObjIndex = 0;
     ImGuizmo::OPERATION operation = ImGuizmo::OPERATION::TRANSLATE;
 
+    efsw::FileWatcher fileWatcher;
+    UpdateListener updateListener;
+
     Camera camera;
     bool handleMouseMovement = true;
 

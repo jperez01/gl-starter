@@ -5,8 +5,8 @@
 #include <SDL.h>
 #include <vector>
 
-#include "utils/types.h"
-#include "utils/shader.h"
+#include "shader/update_listener.h"
+#include "shader/shader.h"
 #include "utils/camera.h"
 #include "utils/model.h"
 #include "utils/common_primitives.h"
@@ -26,15 +26,20 @@ enum DrawOptions {
 
 class GLEngine {
 public:
+    virtual ~GLEngine() = default;
+
     virtual void init_resources();
+    virtual void subscribePrograms(UpdateListener& listener);
     virtual void render(std::vector<Model>& objs) = 0;
     virtual void handleImGui() = 0;
-    virtual void handleObjs(std::vector<Model>& objs) {}
+    virtual void handleObjs(std::vector<Model>& objs);
 
     void loadModelData(Model& model);
 
     Camera* camera = nullptr;
     int WINDOW_WIDTH = 1920, WINDOW_HEIGHT = 1080;
+
+    ScreenQuad screenQuad;
 
 protected:
     float shininess = 200.0f;
@@ -43,7 +48,7 @@ protected:
     float animationTime = 0.0f;
     int chosenAnimation = 0;
 
-    void drawModels(std::vector<Model>& models, Shader& shader, unsigned char drawOptions = 0);
+    void drawModels(std::vector<Model>& models, Shader& shader, unsigned char drawOptions = 0) const;
     void drawPlane();
-    void checkFrustum(std::vector<Model>& objs);
+    void checkFrustum(std::vector<Model>& objs) const;
 };

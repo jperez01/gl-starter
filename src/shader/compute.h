@@ -1,24 +1,18 @@
-#ifndef SHADER_H
-#define SHADER_H
-
-#include <glad/glad.h>
-
+#pragma once
 #include <string>
-#include <fstream>
-#include <sstream>
-#include <iostream>
+#include <glad/glad.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-using namespace std;
 
-class Shader {
+class ComputeShader {
     public:
-        unsigned int ID;
-        Shader();
-        Shader(const char* vertexPath, const char* fragmentPath, const char* geoPath = nullptr);
+        unsigned int ID{};
+
+        ComputeShader();
+        ComputeShader(std::string computePath);
         void use();
 
         void setBool(const std::string &name, bool value) const;
@@ -41,9 +35,6 @@ class Shader {
         void setMat3(const std::string &name, const glm::mat3 &mat) const;
         // ------------------------------------------------------------------------
         void setMat4(const std::string &name, const glm::mat4 &mat) const;
-    
-    private:
-        void checkCompileErrors(unsigned int shader, std::string type);
 };
 
-#endif
+void checkCompileErrors(unsigned int shader, std::string type);

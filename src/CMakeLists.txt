@@ -10,10 +10,13 @@ add_library(gl_tools
     utils/functions.cpp
     utils/camera.cpp
     utils/model.cpp
-    utils/shader.cpp
+        shader/shader.cpp
     utils/types.cpp
-    utils/compute.cpp
-    utils/common_primitives.cpp)
+        shader/compute.cpp
+    utils/common_primitives.cpp
+        shader/update_listener.cpp
+        shader/update_listener.h
+)
 
 add_executable(demo
     exes/main.cpp)
@@ -30,6 +33,8 @@ target_include_directories(demo PUBLIC
 find_package(assimp CONFIG REQUIRED)
 find_package(SDL2 REQUIRED COMPONENTS SDL2)
 
-target_link_libraries(gl_tools glad glm stb_image imgui imGuizmo SDL2::SDL2 assimp::assimp)
+set(EFSW_LIB "${PROJECT_SOURCE_DIR}/libs/efsw/efsw.lib")
+
+target_link_libraries(gl_tools glad glm stb_image imgui imGuizmo SDL2::SDL2 assimp::assimp ${EFSW_LIB})
 
 target_link_libraries(demo gl_tools)
