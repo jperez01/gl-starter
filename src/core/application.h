@@ -3,8 +3,6 @@
 #define SDL_MAIN_HANDLED
 #include "engine/base_engine.h"
 
-#include "utils/file_watcher.h"
-
 class Application {
 public:
     Application(GLEngine *renderer);

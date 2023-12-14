@@ -9,7 +9,7 @@
 
 class ComputeShader {
     public:
-        unsigned int ID;
+        unsigned int ID{};
 
         ComputeShader();
         ComputeShader(std::string computePath);

@@ -10,11 +10,12 @@ add_library(gl_tools
     utils/functions.cpp
     utils/camera.cpp
     utils/model.cpp
-    utils/shader.cpp
+        shader/shader.cpp
     utils/types.cpp
-    utils/compute.cpp
+        shader/compute.cpp
     utils/common_primitives.cpp
-    utils/file_watcher.cpp
+        shader/update_listener.cpp
+        shader/update_listener.h
 )
 
 add_executable(demo

@@ -1,10 +1,10 @@
-#include "compute.h"
+#include "shader/compute.h"
 
 #include <fstream>
 #include <sstream>
 #include <iostream>
 
-ComputeShader::ComputeShader() {}
+ComputeShader::ComputeShader() = default;
 
 ComputeShader::ComputeShader(std::string computePath) {
     std::string generalPath = "../../shaders/";

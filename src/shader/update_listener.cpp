@@ -2,7 +2,7 @@
 // Created by jpabl on 12/2/2023.
 //
 
-#include "file_watcher.h"
+#include "update_listener.h"
 
 #include <iostream>
 
@@ -14,18 +14,13 @@ void UpdateListener::handleFileAction(efsw::WatchID watchid, const std::string& 
             std::cout << "DIR (" << dir << ") FILE (" << filename << ") has event Added"
                       << std::endl;
         break;
-        case efsw::Actions::Delete:
-            std::cout << "DIR (" << dir << ") FILE (" << filename << ") has event Delete"
-                      << std::endl;
-        break;
         case efsw::Actions::Modified: {
             auto it = shaderPathToProgramMap.find(fullPath);
             if (it != shaderPathToProgramMap.end()) {
-                Shader& foundShaderProgram = it->second.second;
-                GLenum shaderType = it->second.first;
-                string shaderCode;
+                auto& [shaderType, foundShaderProgram] = it->second;
 
                 try {
+                    string shaderCode;
                     ifstream shaderFile;
                     shaderFile.exceptions(ifstream::failbit | ifstream::badbit);
 
@@ -59,8 +54,8 @@ void UpdateListener::handleFileAction(efsw::WatchID watchid, const std::string& 
 void UpdateListener::subscribe(Shader&shaderProgram) {
     auto& typesAndPaths = shaderProgram.shaderTypesAndPaths;
 
-    for (auto& typeAndPath : typesAndPaths) {
-        shaderPathToProgramMap.insert({typeAndPath.second, {typeAndPath.first, shaderProgram}});
+    for (auto& [shaderType, path] : typesAndPaths) {
+        shaderPathToProgramMap.insert({path, {shaderType, shaderProgram}});
     }
 }
 

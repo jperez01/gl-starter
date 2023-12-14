@@ -1,7 +1,7 @@
 #pragma once
 
 #include "utils/types.h"
-#include "utils/shader.h"
+#include "shader/shader.h"
 
 struct Material {
 

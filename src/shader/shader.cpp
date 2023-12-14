@@ -1,6 +1,4 @@
-#include "shader.h"
-
-#include "compute.h"
+#include "shader/shader.h"
 
 Shader::Shader() = default;
 
