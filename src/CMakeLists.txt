@@ -17,6 +17,8 @@ add_library(gl_tools STATIC
     shader/shader.cpp
     shader/update_listener.cpp
         renderer/base_renderer.h
+        assets/mesh.cpp
+        assets/mesh.h
 )
 
 add_executable(demo

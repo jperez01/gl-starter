@@ -1,8 +1,7 @@
 #include "base_renderer.h"
 #include "utils/functions.h"
+#include "stb_image.h"
 
-#include <iostream>
-#include <iterator>
 #include <SDL.h>
 #include <thread>
 #include <future>
