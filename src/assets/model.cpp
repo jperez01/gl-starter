@@ -122,7 +122,7 @@ void Mesh::getBoneTransforms(float time, const aiScene* scene,
             totalTransform = translationMatrix * rotationMatrix * scalingMatrix;
         }
 
-        glm::mat4 parentTrasform = (node.parentIndex == -1) ? identity : nodeData[node.parentIndex].transformation;
+        glm::mat4 parentTrasform = node.parentIndex == -1 ? identity : nodeData[node.parentIndex].transformation;
         node.transformation = parentTrasform * totalTransform;
 
         if (boneName_To_Index.find(node.name) != boneName_To_Index.end()) {
@@ -197,7 +197,7 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
     BoundingBox someAABB;
 
     for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
-        Vertex vertex;
+        Vertex vertex{};
         vertex.ID = i;
 
         glm::vec3 vector;
@@ -402,7 +402,7 @@ bool textureFromMemory(void* data, unsigned int bufferSize, Texture& texture) {
 }
 
 bool textureFromFile(const char *path, const std::string &directory, Texture& texture, bool gamma) {
-    std::string filename = std::string(path);
+    auto filename = std::string(path);
     filename = directory + '/' + filename;
 
     int width, height, nrComponents;

@@ -52,7 +52,7 @@ namespace glutil {
     }
 
     AllocatedBuffer createScreenQuad() {
-        AllocatedBuffer quadBuffer;
+        AllocatedBuffer quadBuffer{};
         float quadVertices[] = {
             // positions        // texture Coords
             -1.0f,  1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,

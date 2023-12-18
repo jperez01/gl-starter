@@ -58,7 +58,7 @@ struct Texture {
     std::string type;
     std::string path;
 
-    int width, height, nrComponents;
+    int width = 0, height = 0, nrComponents = 0;
 
     unsigned char* data = nullptr;
 };

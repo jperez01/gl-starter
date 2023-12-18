@@ -10,21 +10,22 @@ namespace glutil {
 };
 
 struct EnviornmentCubemap {
-    AllocatedBuffer buffer;
-    unsigned int texture;
+    AllocatedBuffer buffer{};
+    unsigned int texture{};
     Shader pipeline;
 
-    EnviornmentCubemap() {}
+    EnviornmentCubemap() = default;
 
-    EnviornmentCubemap(std::string path) {
+    explicit EnviornmentCubemap(const std::string& path) {
         pipeline = Shader("cubemap/map.vs", "cubemap/map.fs");
 
         buffer = glutil::createUnitCube();
         texture = glutil::loadCubemap(path);
     }
 
-    void draw(glm::mat4& projection, glm::mat4& view) {
-        glm::mat4 convertedView = glm::mat4(glm::mat3(view));
+    void draw(const glm::mat4& projection, const glm::mat4& view) const {
+        const glm::mat4 convertedView = glm::mat4(glm::mat3(view));
+
         glDepthFunc(GL_LEQUAL);
         pipeline.use();
         pipeline.setMat4("projection", projection);
@@ -41,15 +42,15 @@ struct EnviornmentCubemap {
 };
 
 struct ScreenQuad {
-    AllocatedBuffer buffer;
+    AllocatedBuffer buffer{};
 
-    ScreenQuad() {}
+    ScreenQuad() = default;
 
     void init() {
         buffer = glutil::createScreenQuad();
     }
 
-    void draw() {
+    void draw() const {
         glBindVertexArray(buffer.VAO);
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
     }

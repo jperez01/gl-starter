@@ -2,24 +2,44 @@
 
 Shader::Shader() = default;
 
+Shader::Shader(const char* computePath) {
+    const string shaderPath = "../../shaders/";
+
+    std::string finalComputePath = shaderPath + computePath;
+
+    std::string computeCode;
+    try {
+        openAndLoadShaderFile(finalComputePath, computeCode);
+    } catch (ifstream::failure& e) {
+        std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ " << e.what() << std::endl;
+    }
+
+    unsigned int possibleComputeId = compileShader(GL_COMPUTE_SHADER, computeCode.c_str());
+    setupProgram({possibleComputeId});
+
+    computeId = possibleComputeId;
+
+    shaderTypesAndPaths.emplace_back(GL_COMPUTE_SHADER, finalComputePath);
+}
+
 Shader::Shader(const char* vertexPath, const char* fragmentPath,
     const char* geoPath) {
     const string shaderPath = "../../shaders/";
 
-    string convertedVertexPath = shaderPath + vertexPath;
-    string convertedFragmentPath = shaderPath + fragmentPath;
-    string convertedGeometryPath;
-    if (geoPath != nullptr) convertedGeometryPath = shaderPath + geoPath;
+    string finalVertexPath = shaderPath + vertexPath;
+    string finalFragmentPath = shaderPath + fragmentPath;
+    string finalGeometryPath;
+    if (geoPath != nullptr) finalGeometryPath = shaderPath + geoPath;
 
     string vertexCode;
     string fragmentCode;
     string geoCode;
 
     try {
-        openAndLoadShaderFile(convertedVertexPath, vertexCode);
-        openAndLoadShaderFile(convertedFragmentPath, fragmentCode);
+        openAndLoadShaderFile(finalVertexPath, vertexCode);
+        openAndLoadShaderFile(finalFragmentPath, fragmentCode);
         if (geoPath) {
-            openAndLoadShaderFile(convertedGeometryPath, geoCode);
+            openAndLoadShaderFile(finalGeometryPath, geoCode);
         }
     } catch (ifstream::failure& e) {
         std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ " << e.what() << std::endl;
@@ -48,14 +68,14 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath,
     fragmentId = fragment;
     geometryId = geometry;
 
-    shaderTypesAndPaths = { {GL_VERTEX_SHADER, convertedVertexPath}, { GL_FRAGMENT_SHADER, convertedFragmentPath}};
+    shaderTypesAndPaths = { {GL_VERTEX_SHADER, finalVertexPath}, { GL_FRAGMENT_SHADER, finalFragmentPath}};
     if (geoPath) {
-        shaderTypesAndPaths.emplace_back(GL_GEOMETRY_SHADER, convertedGeometryPath);
+        shaderTypesAndPaths.emplace_back(GL_GEOMETRY_SHADER, finalGeometryPath);
     }
 
 }
 
-void Shader::setupProgram(vector<unsigned> shaderIds) {
+void Shader::setupProgram(const vector<unsigned>& shaderIds) {
     GLint possibleId = glCreateProgram();
     for (auto& shaderId : shaderIds) {
         glAttachShader(possibleId, shaderId);
@@ -155,7 +175,7 @@ void Shader::reloadShader(const char* codeBuffer, GLenum shaderType) {
 }
 
 
-void Shader::use() {
+void Shader::use() const {
     glUseProgram(ID);
 }
 

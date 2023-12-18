@@ -1,9 +1,9 @@
 #include "application.h"
+
+#include <utility>
 #include "ui/ui.h"
 
-Application::Application(GLEngine* renderer) {
-    mRenderer = renderer;
-}
+Application::Application() = default;
 
 void GLAPIENTRY
 MessageCallback(GLenum source,
@@ -37,7 +37,7 @@ void Application::init()
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
-    SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE
+    auto window_flags = static_cast<SDL_WindowFlags>(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE
         | SDL_WINDOW_ALLOW_HIGHDPI);
     window = SDL_CreateWindow("GL Engine", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         WINDOW_WIDTH, WINDOW_HEIGHT, window_flags);
@@ -63,7 +63,7 @@ void Application::init()
     }
 
     glEnable(GL_DEBUG_OUTPUT);
-    glDebugMessageCallback(MessageCallback, 0);
+    glDebugMessageCallback(MessageCallback, nullptr);
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -80,27 +80,25 @@ void Application::init()
     camera = Camera(glm::vec3(0.0f, 5.0f, 5.0f));
     camera.aspect = (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT;
 
-    mRenderer->camera = &camera;
+    mRenderer.camera = &camera;
 
-    mRenderer->init_resources();
-    mRenderer->subscribePrograms(updateListener);
-
-    // asyncLoadModel("../../resources/objects/sponzaBasic/glTF/Sponza.gltf", GLTF);
+    mRenderer.init_resources();
+    mRenderer.subscribePrograms(updateListener);
 
     Model newModel("../../resources/objects/sponzaBasic/glTF/Sponza.gltf", GLTF);
-    glm::mat4 model = glm::mat4(1.0f);
+    auto model = glm::mat4(1.0f);
     model = glm::scale(model, glm::vec3(0.1f));
     newModel.model_matrix = model;
-    mRenderer->loadModelData(newModel);
+    mRenderer.loadModelData(newModel);
     usableObjs.push_back(newModel);
 
-    mRenderer->handleObjs(usableObjs);
+    mRenderer.handleObjs(usableObjs);
 
-    mEditor.renderer = mRenderer;
+    mEditor.renderer = &mRenderer;
     mEditor.objs = &usableObjs;
 
     std::string path = "../../shaders/default";
-    efsw::WatchID watchID = fileWatcher.addWatch(path, &updateListener, true);
+    fileWatcher.addWatch(path, &updateListener, true);
     fileWatcher.watch();
 }
 
@@ -118,7 +116,7 @@ void Application::cleanup()
 void Application::mainLoop()
 {
     while (!closedWindow) {
-        float currentFrame = static_cast<float>(SDL_GetTicks());
+        auto currentFrame = static_cast<float>(SDL_GetTicks());
         deltaTime = currentFrame - lastFrame;
         deltaTime *= 0.01f;
         lastFrame = currentFrame;
@@ -127,7 +125,7 @@ void Application::mainLoop()
         handleEvents();
         handleImportedObjs();
 
-        mRenderer->render(usableObjs);
+        mRenderer.render(usableObjs);
 
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplSDL2_NewFrame();
@@ -166,14 +164,14 @@ void Application::handleEvents()
         }
         else if (event.type == SDL_MOUSEMOTION && (!io.WantCaptureMouse || ImGuizmo::IsOver())
             && handleMouseMovement) {
-            mouse_callback(event.motion.x, event.motion.y);
+            handleMouse(event.motion.x, event.motion.y);
         }
         else if (event.type == SDL_MOUSEWHEEL) {
-            scroll_callback(event.wheel.y);
+            handleScroll(event.wheel.y);
         }
         else if (event.type == SDL_WINDOWEVENT
             && event.window.event == SDL_WINDOWEVENT_RESIZED) {
-            framebuffer_callback(event.window.data1, event.window.data2);
+            handleSizeChange(event.window.data1, event.window.data2);
         }
         else if (event.type == SDL_MOUSEBUTTONDOWN) {
             handleClick(event.motion.x, event.motion.y);
@@ -201,7 +199,7 @@ void Application::handleImportedObjs()
 {
     if (!importedObjs.empty()) {
         Model model = importedObjs[importedObjs.size() - 1];
-        mRenderer->loadModelData(model);
+        mRenderer.loadModelData(model);
 
         importedObjs.pop_back();
         usableObjs.push_back(model);
@@ -210,15 +208,15 @@ void Application::handleImportedObjs()
 
 void Application::asyncLoadModel(std::string path, FileType type)
 {
-    Model newModel(path, type);
+    Model newModel(std::move(path), type);
 
     importedObjs.push_back(newModel);
 }
 
-void Application::mouse_callback(double xposIn, double yposIn)
+void Application::handleMouse(double xposIn, double yposIn)
 {
-    float xpos = static_cast<float>(xposIn);
-    float ypos = static_cast<float>(yposIn);
+    auto xpos = static_cast<float>(xposIn);
+    auto ypos = static_cast<float>(yposIn);
     if (firstMouse) {
         lastX = xpos;
         lastY = ypos;
@@ -232,24 +230,25 @@ void Application::mouse_callback(double xposIn, double yposIn)
     camera.processMouseMovement(xoffset, yoffset);
 }
 
-void Application::scroll_callback(double yoffset)
+void Application::handleScroll(double yoffset)
 {
     camera.processMouseScroll(static_cast<float>(yoffset));
 }
 
-void Application::framebuffer_callback(int width, int height)
+void Application::handleSizeChange(int width, int height)
 {
     glViewport(0, 0, width, height);
     WINDOW_HEIGHT = height;
     WINDOW_WIDTH = width;
-    mRenderer->WINDOW_HEIGHT = height;
-    mRenderer->WINDOW_WIDTH = width;
+    mRenderer.windowSize = glm::ivec2(WINDOW_WIDTH, WINDOW_HEIGHT);
+    mRenderer.WINDOW_HEIGHT = height;
+    mRenderer.WINDOW_WIDTH = width;
 }
 
 void Application::handleClick(double xposIn, double yposIn)
 {
-    float xpos = static_cast<float>(xposIn);
-    float ypos = static_cast<float>(yposIn);
+    auto xpos = static_cast<float>(xposIn);
+    auto ypos = static_cast<float>(yposIn);
 
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.1f, 100.0f);
 

@@ -22,20 +22,20 @@ Camera::Camera(float posX, float posY, float posZ,
     updateCameraVectors();
 }
 
-glm::mat4 Camera::getViewMatrix() {
+glm::mat4 Camera::getViewMatrix() const {
     return glm::lookAt(Position, Position + Front, Up);
 }
 
-glm::mat4 Camera::getProjectionMatrix(ProjectionType type) {
-    if (type == PERSPECTIVE)
+glm::mat4 Camera::getProjectionMatrix(ProjectionType type) const {
+    if (type == PERSPECTIVE) {
         return glm::perspective(glm::radians(Zoom), aspect, zNear, zFar);
-    else
-        return glm::ortho(-100.0f, 100.0f, -100.0f, 100.0f, 0.1f, 100.0f);
+    }
+
+    return glm::ortho(-100.0f, 100.0f, -100.0f, 100.0f, 0.1f, 100.0f);
 }
 
 void Camera::processKeyboard(Camera_Movement direction, float deltaTime) {
     float velocity = MovementSpeed * deltaTime;
-    glm::vec3 position = Position;
     if (direction == FORWARD)
         Position += Front * velocity;
     if (direction == BACKWARD)
@@ -68,7 +68,7 @@ void Camera::processMouseMovement(float xoffset, float yoffset,
 }
 
 void Camera::processMouseScroll(float yoffset) {
-    Zoom -= (float)yoffset;
+    Zoom -= yoffset;
     if (Zoom < 1.0f)
         Zoom = 1.0f;
     if (Zoom > 45.0f)
@@ -104,7 +104,7 @@ void Camera::updateFrustum() {
     };
 }
 
-bool Camera::radarInsideFrustum(glm::vec4& maxPoint, glm::vec4& minPoint) {
+bool Camera::radarInsideFrustum(glm::vec4& maxPoint, glm::vec4& minPoint) const {
     glm::vec3 currentPoint(maxPoint.x, maxPoint.y, maxPoint.z);
 
     glm::vec3 v = currentPoint - Position;

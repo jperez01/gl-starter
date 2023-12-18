@@ -20,7 +20,8 @@ inline std::map<GLint, std::string> shaderTypeToStringMap{
     {GL_VERTEX_SHADER, "VERTEX"},
     {GL_FRAGMENT_SHADER, "FRAGMENT"},
     {GL_PROGRAM, "PROGRAM"},
-    {GL_GEOMETRY_SHADER, "GEOMETRTY"}
+    {GL_GEOMETRY_SHADER, "GEOMETRTY"},
+    {GL_COMPUTE_SHADER, "COMPUTE"}
 };
 
 class Shader {
@@ -29,8 +30,9 @@ public:
     std::vector<std::pair<GLenum, std::string>> shaderTypesAndPaths;
 
     Shader();
+    explicit Shader(const char* computePath);
     Shader(const char* vertexPath, const char* fragmentPath, const char* geoPath = nullptr);
-    void use();
+    void use() const;
 
     void reloadShader(const char* codeBuffer, GLenum shaderType);
 
@@ -56,9 +58,10 @@ public:
     void setMat4(const std::string &name, const glm::mat4 &mat) const;
 
 private:
-    void setupProgram(vector<unsigned int> shaderIds);
+    void setupProgram(const vector<unsigned int>& shaderIds);
 
-    unsigned int vertexId, fragmentId, geometryId;
+    unsigned int vertexId{}, fragmentId{}, geometryId{};
+    unsigned int computeId{};
 };
 
 void openAndLoadShaderFile(const string& fullPath, string& codeBuffer);

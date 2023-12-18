@@ -69,8 +69,8 @@ public:
         float yaw, float pitch);
 
     // returns the view matrix calculated using Euler Angles and the LookAt Matrix
-    glm::mat4 getViewMatrix();
-    glm::mat4 getProjectionMatrix(ProjectionType type = PERSPECTIVE);
+    glm::mat4 getViewMatrix() const;
+    glm::mat4 getProjectionMatrix(ProjectionType type = PERSPECTIVE) const;
 
     // processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
     void processKeyboard(Camera_Movement direction, float deltaTime);
@@ -82,7 +82,7 @@ public:
     void processMouseScroll(float yoffset);
 
     bool isInsideFrustum(glm::vec4& maxPoint, glm::vec4& minPoint);
-    bool radarInsideFrustum(glm::vec4& maxPoint, glm::vec4& minPoint);
+    bool radarInsideFrustum(glm::vec4& maxPoint, glm::vec4& minPoint) const;
 
 private:
     // calculates the front vector from the Camera's (updated) Euler Angles

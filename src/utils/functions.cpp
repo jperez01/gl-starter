@@ -3,10 +3,9 @@
 
 #include <glad/glad.h>
 #include <iostream>
-#include <utility>
 
 namespace glutil {
-    unsigned int loadFloatTexture(std::string path, GLenum format, GLenum storageFormat) {
+    unsigned int loadFloatTexture(const std::string& path, GLenum format, GLenum storageFormat) {
         int width, height, nrComponents;
 
         float *data = stbi_loadf(path.c_str(), &width, &height, &nrComponents, 0);
@@ -21,7 +20,7 @@ namespace glutil {
         }
     }
 
-    unsigned int loadTexture(std::string path, GLenum dataType, GLenum format, GLenum storageFormat) {
+    unsigned int loadTexture(const std::string& path, GLenum dataType, GLenum format, GLenum storageFormat) {
         int width, height, nrComponents;
         
         unsigned char *data = stbi_load(path.c_str(), &width, &height, &nrComponents, 0);
@@ -36,7 +35,7 @@ namespace glutil {
         }
     }
 
-    unsigned int loadTexture(std::string path) {
+    unsigned int loadTexture(const std::string& path) {
         int width, height, nrComponents;
 
         unsigned char *data = stbi_load(path.c_str(), &width, &height, &nrComponents, 0);
@@ -52,7 +51,7 @@ namespace glutil {
         }
     }
 
-    Texture loadSomeTexture(std::string path) {
+    Texture loadSomeTexture(const std::string& path) {
         Texture texture;
         int width, height, nrComponents;
 
@@ -67,8 +66,7 @@ namespace glutil {
             texture.nrComponents = nrComponents;
 
             return texture;
-        }
-        else {
+        } else {
             std::cout << "Texture failed to load at path: " << path << std::endl;
             stbi_image_free(data);
 
@@ -135,8 +133,8 @@ namespace glutil {
         unsigned int textureID;
         glCreateTextures(GL_TEXTURE_2D, 1, &textureID);
 
-        GLenum format;
-        GLenum storageFormat;
+        GLenum format = GL_RGBA;
+        GLenum storageFormat = GL_RGBA8;
         if (nrComponents == 0) {
             format = GL_DEPTH_COMPONENT;
             storageFormat = GL_DEPTH_COMPONENT;
@@ -198,7 +196,7 @@ namespace glutil {
         return cubemapID;
     }
 
-    unsigned int loadCubemap(std::string path, std::vector<std::string> faces) {
+    unsigned int loadCubemap(const std::string& path, std::vector<std::string> faces) {
         unsigned int textureID;
         
         glGenTextures(1, &textureID);
@@ -206,8 +204,8 @@ namespace glutil {
 
         int width, height, nrChannels;
 
-        GLenum format;
-        GLenum storageFormat;
+        GLenum format = GL_RGBA;
+        GLenum storageFormat = GL_RGBA8;
 
         for (int i = 0; i < 6; i++) {
             std::string facePath = path + faces[i];
@@ -256,8 +254,8 @@ namespace glutil {
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
         int totalLength = 0;
-        for (int i = 0; i < endpoints.size(); i++) {
-            totalLength += sizes[endpoints[i]];
+        for (auto endpoint : endpoints) {
+            totalLength += sizes[endpoint];
         }
 
         int currentOffset = 0;
@@ -270,7 +268,7 @@ namespace glutil {
             currentOffset += sizes[type];
         }
 
-        AllocatedBuffer newBuffer;
+        AllocatedBuffer newBuffer{};
         newBuffer.VAO = VAO;
         newBuffer.VBO = VBO;
 
@@ -293,8 +291,8 @@ namespace glutil {
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
         int totalLength = 0;
-        for (int i = 0; i < endpoints.size(); i++) {
-            totalLength += sizes[endpoints[i]];
+        for (auto endpoint : endpoints) {
+            totalLength += sizes[endpoint];
         }
 
         int currentOffset = 0;
@@ -309,7 +307,7 @@ namespace glutil {
 
         glVertexArrayElementBuffer(VAO, EBO);
 
-        AllocatedBuffer newBuffer;
+        AllocatedBuffer newBuffer{};
         newBuffer.VAO = VAO;
         newBuffer.VBO = VBO;
         newBuffer.EBO = EBO;
@@ -333,8 +331,8 @@ namespace glutil {
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
         int totalLength = 0;
-        for (int i = 0; i < endpoints.size(); i++) {
-            totalLength += sizes[endpoints[i]];
+        for (auto endpoint : endpoints) {
+            totalLength += sizes[endpoint];
         }
 
         int currentOffset = 0;
@@ -354,7 +352,7 @@ namespace glutil {
 
         glVertexArrayElementBuffer(VAO, EBO);
 
-        AllocatedBuffer newBuffer;
+        AllocatedBuffer newBuffer{};
         newBuffer.VAO = VAO;
         newBuffer.VBO = VBO;
         newBuffer.EBO = EBO;

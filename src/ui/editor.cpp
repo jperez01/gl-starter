@@ -80,7 +80,7 @@ void SceneEditor::render(Camera& camera)
 			}
 			if (ImGui::CollapsingHeader("Ints")) {
 				for (auto& pair : chosenMaterial->uniformInts) {
-					ImGui::SliderInt(pair.first.c_str(), &pair.second, 0.0f, 1.0f);
+					ImGui::SliderInt(pair.first.c_str(), &pair.second, 0, 200);
 				}
 			}
 			if (ImGui::CollapsingHeader("Floats")) {
@@ -104,7 +104,7 @@ void SceneEditor::render(Camera& camera)
 	}
 	ImGui::End();
 
-	ImGui::ShowDemoWindow();
+	// ImGui::ShowDemoWindow();
 }
 
 void SceneEditor::renderDebug(Camera& camera)

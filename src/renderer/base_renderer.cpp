@@ -1,4 +1,4 @@
-#include "base_engine.h"
+#include "base_renderer.h"
 #include "utils/functions.h"
 
 #include <iostream>
@@ -14,14 +14,14 @@
 #include "imgui/imgui_stdlib.h"
 #include "ImGuizmo.h"
 
-void GLEngine::init_resources() {
+void BaseRenderer::init_resources() {
     startTime = static_cast<float>(SDL_GetTicks());
 }
 
-void GLEngine::subscribePrograms(UpdateListener&listener) {}
-void GLEngine::handleObjs(std::vector<Model>& objs) {}
+void BaseRenderer::subscribePrograms(UpdateListener&listener) {}
+void BaseRenderer::handleObjs(std::vector<Model>& objs) {}
 
-void GLEngine::drawModels(std::vector<Model>& models, Shader& shader, unsigned char drawOptions) const {
+void BaseRenderer::drawModels(std::vector<Model>& models, Shader& shader, unsigned char drawOptions) const {
     bool shouldSkipTextures = drawOptions & SKIP_TEXTURES;
     bool shouldSkipCulling = drawOptions & SKIP_CULLING;
 
@@ -57,14 +57,14 @@ void GLEngine::drawModels(std::vector<Model>& models, Shader& shader, unsigned c
                     shader.setBool("noNormalMap", false);
                 }
 
-                for (unsigned int i = 0; i < material.textures.size(); i++) {
+                for (int i = 0; i < material.textures.size(); i++) {
                     glActiveTexture(GL_TEXTURE0 + i);
 
                     string number;
                     string name = material.textures[i].type;
 
-                    string key = name;
-                    shader.setInt(key.c_str(), i);
+                    const string& key = name;
+                    shader.setInt(key, i);
 
                     glBindTexture(GL_TEXTURE_2D, material.textures[i].id);
                 }
@@ -83,13 +83,13 @@ void GLEngine::drawModels(std::vector<Model>& models, Shader& shader, unsigned c
             }
 
             glBindVertexArray(mesh.buffer.VAO);
-            glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, 0);
+            glDrawElements(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, nullptr);
             glBindVertexArray(0);
         }
     }
 }
 
-void GLEngine::loadModelData(Model& model) {
+void BaseRenderer::loadModelData(Model& model) {
     for (auto& info : model.textures_loaded) {
         Texture& texture = info.second;
         int levels = (texture.type == "texture_normal" || texture.width < 16) ? 1 : 4;
@@ -112,7 +112,7 @@ void GLEngine::loadModelData(Model& model) {
         std::vector<VertexType> endpoints = { POSITION, NORMAL, TEXCOORDS, TANGENT, BI_TANGENT, VERTEX_ID };
         mesh.buffer = glutil::loadVertexBuffer(mesh.vertices, mesh.indices, endpoints);
 
-        if (mesh.bone_data.size() != 0 && model.scene->mAnimations > 0) {
+        if (!mesh.bone_data.empty() && model.scene->mNumAnimations > 0) {
             glCreateBuffers(1, &mesh.SSBO);
             glNamedBufferStorage(mesh.SSBO, sizeof(VertexBoneData) * mesh.bone_data.size(),
                 mesh.bone_data.data(), GL_DYNAMIC_STORAGE_BIT);
@@ -120,7 +120,7 @@ void GLEngine::loadModelData(Model& model) {
     }
 }
 
-void GLEngine::checkFrustum(std::vector<Model>& objs) const {
+void BaseRenderer::checkFrustum(std::vector<Model>& objs) const {
     for (Model& model : objs) {
         glm::vec4 transformedMax = model.model_matrix * model.aabb.maxPoint;
         glm::vec4 transformedMin = model.model_matrix * model.aabb.minPoint;

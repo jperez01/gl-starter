@@ -21,9 +21,9 @@ namespace UI {
         if (size == 0)
             size = 16;
 
-        float aspect = icons.width / icons.height;
+        float aspect = static_cast<float>(icons.width) / icons.height;
         ImVec4 color(1.0f, 1.0f, 1.0f, alpha);
-        ImVec2 uv0(x / 16.0f, x / 16.0f);
+        ImVec2 uv0(x / 16.0f, y / 16.0f);
         ImVec2 uv1(uv0.x + 1.0f / 16.0f, uv0.y + 1.0f / 16.0f);
 
         glBindTextureUnit(0, icons.id);

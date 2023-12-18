@@ -11,8 +11,8 @@
 #include <unordered_map>
 #include <memory>
 
-#include "types.h"
-#include "material.h"
+#include "utils/types.h"
+#include "utils/material.h"
 
 struct NodeData {
     glm::mat4 transformation;
