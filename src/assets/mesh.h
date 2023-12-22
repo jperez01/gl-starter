@@ -28,9 +28,8 @@ struct Mesh {
     unsigned int SSBO;
 
     void getBoneTransforms(float time, const aiScene* scene, std::vector<NodeData>& nodeData, int animationIndex = 0);
-    const aiNodeAnim* findNodeAnim(const aiAnimation* animation, const std::string nodeName);
+    const aiNodeAnim* findNodeAnim(const aiAnimation* animation, const std::string& nodeName);
 
-    void calcInterpolatedScaling(aiVector3D& out, float animationTicks, const aiNodeAnim* nodeAnim);
-    void calcInterpolatedRotation(aiQuaternion& out, float animationTicks, const aiNodeAnim* nodeAnim);
-    void calcInterpolatedPosition(aiVector3D& out, float animationTicks, const aiNodeAnim* nodeAnim);
+    aiVector3D calcInterpolatedTransform(float animationTicks, unsigned int numKeys, aiVectorKey* keys);
+    aiQuaternion calcInterpolatedRotation(float animationTicks, const aiNodeAnim* nodeAnim);
 };
