@@ -1,14 +1,37 @@
 #include "model.h"
+
+#include <filesystem>
+
 #include "stb_image.h"
 
 #include <iostream>
 #include <glm/gtx/quaternion.hpp>
 #include <assimp/postprocess.h>
 
+#include "utils/paths.h"
+
 Model::Model() = default;
 
 Model::Model(std::string path, FileType type) {
-    loadInfo(path, type);
+    size_t beginningOfPath = path.find_last_of('/');
+    size_t endOfPath = path.find('.');
+    std::string nameOfModel = path.substr(beginningOfPath, endOfPath - beginningOfPath);
+
+    auto startTime = std::chrono::high_resolution_clock::now();
+    std::string assetFolderPath = ASSET_PATH + nameOfModel;
+    if (std::filesystem::exists(assetFolderPath)) {
+        loadFromAsset(assetFolderPath);
+    }
+    else {
+        std::string normalObjectPath = OBJECT_PATH + path;
+        loadInfo(normalObjectPath, type);
+
+        saveToAsset(assetFolderPath);
+    }
+    auto endTime = std::chrono::high_resolution_clock::now();
+    double elapsedTime = std::chrono::duration<double, std::milli>(endTime - startTime).count();
+
+    std::cout << "Elapsed Time to load model data: " << elapsedTime << " ms\n";
     model_matrix = glm::mat4(1.0f);
 }
 
@@ -17,8 +40,8 @@ void Model::loadInfo(std::string path, FileType type) {
         aiProcess_ConvertToLeftHanded, 0
     };
     const unsigned int importerFlags =
-        aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace |
-        fileTypeInfo[type];
+            aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace |
+            fileTypeInfo[type];
     Assimp::Importer importer;
     scene = importer.ReadFile(path, importerFlags);
 
@@ -34,9 +57,67 @@ void Model::loadInfo(std::string path, FileType type) {
     scene = importer.GetOrphanedScene();
 }
 
-void Model::processNode(aiNode *node, const aiScene *scene, int parentIndex) {
+void Model::saveToAsset(const std::string& assetFolderPath) {
+    std::filesystem::create_directory(assetFolderPath);
+
+    ModelAssetInfo info;
+    info.numMeshes = meshes.size();
+    info.numTexture = textures_loaded.size();
+
+    assets::AssetFile file = asset_converter.convertModelAssetInfoToBinary(info);
+    std::string mainFilePath = assetFolderPath + "/main.object";
+    assets::saveBinaryFile(mainFilePath, file);
+
+    std::string meshFolderPath = assetFolderPath + "/meshes";
+    std::string textureFolderPath = assetFolderPath + "/textures";
+    std::filesystem::create_directory(meshFolderPath);
+    std::filesystem::create_directory(textureFolderPath);
+
+    int i = 0;
+    for (Mesh&mesh: meshes) {
+        auto file = asset_converter.convertMeshToBinary(mesh);
+        std::string assetPath = assetFolderPath + "/meshes/mesh" + std::to_string(i) + ".object";
+        i++;
+        bool saveSuccessful = assets::saveBinaryFile(assetPath, file);
+        if (!saveSuccessful) {
+            std::cout << "Error occured while saving mesh \n";
+        }
+    }
+
+    i = 0;
+    for (auto&[path, texture]: textures_loaded) {
+        auto file = asset_converter.convertTextureToBinary(texture);
+
+        std::string assetPath = assetFolderPath + "/textures/texture" + std::to_string(i) + ".object";
+        i++;
+        bool saveSuccessful = assets::saveBinaryFile(assetPath, file);
+        if (!saveSuccessful) {
+            std::cout << "Error occured while saving texture \n";
+        }
+    }
+}
+
+void Model::loadFromAsset(const std::string&assetFolderPath) {
+    std::string modelInfoPath = assetFolderPath + "/main.object";
+    ModelAssetInfo info = asset_converter.convertBinaryToModelAssetInfo(modelInfoPath);
+
+    for (int i = 0; i < info.numMeshes; i++) {
+        std::string meshAssetPath = assetFolderPath + "/meshes/mesh" + std::to_string(i) + ".object";
+        Mesh mesh = asset_converter.convertBinaryToMesh(meshAssetPath);
+        meshes.push_back(mesh);
+    }
+
+    for (int i = 0; i < info.numTexture; i++) {
+        std::string textureAssetPath = assetFolderPath + "/textures/texture" + std::to_string(i) + ".object";
+        Texture texture = asset_converter.convertBinaryToTexture(textureAssetPath);
+
+        textures_loaded[textureAssetPath] = texture;
+    }
+}
+
+void Model::processNode(aiNode* node, const aiScene* scene, int parentIndex) {
     for (unsigned int i = 0; i < node->mNumMeshes; i++) {
-        aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
+        aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
         meshes.push_back(processMesh(mesh, scene));
     }
 
@@ -52,7 +133,7 @@ void Model::processNode(aiNode *node, const aiScene *scene, int parentIndex) {
     }
 }
 
-Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
+Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
     std::vector<std::string> textures;
@@ -113,7 +194,8 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
             vector.y = mesh->mBitangents[i].y;
             vector.z = mesh->mBitangents[i].z;
             vertex.Bitangent = vector;
-        } else {
+        }
+        else {
             vertex.TexCoords = glm::vec2(0.0f, 0.0f);
         }
         vertices.push_back(vertex);
@@ -139,7 +221,7 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
         );
     }
 
-    if(mesh->HasBones()) {
+    if (mesh->HasBones()) {
         boneData.resize(vertices.size());
         boneInfo.resize(mesh->mNumBones);
         for (unsigned int i = 0; i < mesh->mNumBones; i++) {
@@ -150,7 +232,7 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
 
             boneInfo[i].offsetTransform = convertMatrix(bone->mOffsetMatrix);
             for (unsigned int j = 0; j < bone->mNumWeights; j++) {
-                auto& weight = bone->mWeights[j];
+                auto&weight = bone->mWeights[j];
                 addBoneData(boneData[weight.mVertexId], i, weight.mWeight);
             }
         }
@@ -163,36 +245,37 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
     }
     Mesh newMesh;
 
-    Material& loadedMaterial = materials_loaded.at(mesh->mMaterialIndex);
-    if (loadedMaterial.texture_paths.size() == 0) {
+    Material&loadedMaterial = materials_loaded.at(mesh->mMaterialIndex);
+    if (loadedMaterial.texture_paths.empty()) {
         aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 
         std::vector<std::string> diffuseMaps = loadMaterialTextures(material,
-            aiTextureType_DIFFUSE, "texture_diffuse");
+                                                                    aiTextureType_DIFFUSE, "texture_diffuse");
         textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
 
         std::vector<std::string> specularMaps = loadMaterialTextures(material,
-            aiTextureType_SPECULAR, "texture_specular");
+                                                                     aiTextureType_SPECULAR, "texture_specular");
         textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
 
         std::vector<std::string> normalMaps = loadMaterialTextures(material,
-            aiTextureType_NORMALS, "texture_normal");
+                                                                   aiTextureType_NORMALS, "texture_normal");
         textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
 
         std::vector<std::string> heightMaps = loadMaterialTextures(material,
-            aiTextureType_AMBIENT, "texture_height");
+                                                                   aiTextureType_AMBIENT, "texture_height");
         textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
 
         std::vector<std::string> aoMaps = loadMaterialTextures(material,
-            aiTextureType_LIGHTMAP, "texture_ao");
+                                                               aiTextureType_LIGHTMAP, "texture_ao");
         textures.insert(textures.end(), aoMaps.begin(), aoMaps.end());
 
         std::vector<std::string> metallicMaps = loadMaterialTextures(material,
-            aiTextureType_METALNESS, "texture_metallic");
+                                                                     aiTextureType_METALNESS, "texture_metallic");
         textures.insert(textures.end(), metallicMaps.begin(), metallicMaps.end());
 
         std::vector<std::string> roughnessMaps = loadMaterialTextures(material,
-            aiTextureType_DIFFUSE_ROUGHNESS, "texture_roughness");
+                                                                      aiTextureType_DIFFUSE_ROUGHNESS,
+                                                                      "texture_roughness");
         textures.insert(textures.end(), roughnessMaps.begin(), roughnessMaps.end());
 
         loadedMaterial.texture_paths = textures;
@@ -207,12 +290,12 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene) {
     newMesh.bone_data = boneData;
     newMesh.bone_info = boneInfo;
     newMesh.boneName_To_Index = nameToIndex;
-    
+
     return newMesh;
 }
 
-std::vector<std::string> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType type, 
-    std::string typeName) {
+std::vector<std::string> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType type,
+                                                     std::string typeName) {
     std::vector<std::string> textures;
 
     for (unsigned int i = 0; i < mat->GetTextureCount(type); i++) {
@@ -247,9 +330,10 @@ std::vector<std::string> Model::loadMaterialTextures(aiMaterial *mat, aiTextureT
     return textures;
 }
 
-bool textureFromMemory(void* data, unsigned int bufferSize, Texture& texture) {
+bool textureFromMemory(void* data, unsigned int bufferSize, Texture&texture) {
     int width, height, nrComponents;
-    unsigned char* image_data = stbi_load_from_memory((const stbi_uc*)data, bufferSize, &width, &height, &nrComponents, 0);
+    unsigned char* image_data = stbi_load_from_memory((const stbi_uc *)data, bufferSize, &width, &height, &nrComponents,
+                                                      0);
 
     if (image_data) {
         texture.data = image_data;
@@ -258,7 +342,8 @@ bool textureFromMemory(void* data, unsigned int bufferSize, Texture& texture) {
         texture.height = height;
 
         return true;
-    } else {
+    }
+    else {
         std::cout << "Embedded Texture failed to load " << std::endl;
         stbi_image_free(data);
 
@@ -266,19 +351,20 @@ bool textureFromMemory(void* data, unsigned int bufferSize, Texture& texture) {
     }
 }
 
-bool textureFromFile(const char *path, const std::string &directory, Texture& texture, bool gamma) {
+bool textureFromFile(const char* path, const std::string&directory, Texture&texture, bool gamma) {
     auto filename = std::string(path);
     filename = directory + '/' + filename;
 
     int width, height, nrComponents;
-    unsigned char *data = stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
+    unsigned char* data = stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
     if (data) {
         texture.data = data;
         texture.nrComponents = nrComponents;
         texture.width = width;
         texture.height = height;
         return true;
-    } else {
+    }
+    else {
         std::cout << "Texture failed to load at path: " << path << std::endl;
         stbi_image_free(data);
 
@@ -286,7 +372,7 @@ bool textureFromFile(const char *path, const std::string &directory, Texture& te
     }
 }
 
-glm::mat4 convertMatrix(const aiMatrix4x4& aiMat) {
+glm::mat4 convertMatrix(const aiMatrix4x4&aiMat) {
     return {
         aiMat.a1, aiMat.b1, aiMat.c1, aiMat.d1,
         aiMat.a2, aiMat.b2, aiMat.c2, aiMat.d2,

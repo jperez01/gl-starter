@@ -8,6 +8,7 @@
 #include <vector>
 #include <unordered_map>
 
+#include "asset_converter.h"
 #include "utils/material.h"
 #include "assets/mesh.h"
 
@@ -35,11 +36,14 @@ class Model {
         int numAnimations = 0;
 
         const aiScene* scene;
+        AssetConverter asset_converter;
 
         Model();
         explicit Model(std::string path, FileType type = OBJ);
     private:
         void loadInfo(std::string path, FileType type);
+        void loadFromAsset(const std::string& assetFolderPath);
+        void saveToAsset(const std::string& assetFolderPath);
 
         void processNode(aiNode *node, const aiScene *scene, int parentIndex = -1);
         Mesh processMesh(aiMesh *mesh, const aiScene *scene);

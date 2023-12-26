@@ -1,12 +1,11 @@
 #include "shader/shader.h"
 
+#include "utils/paths.h"
+
 Shader::Shader() = default;
 
 Shader::Shader(const char* computePath) {
-    const string shaderPath = "../../shaders/";
-
-    std::string finalComputePath = shaderPath + computePath;
-
+    std::string finalComputePath = SHADER_PATH + computePath;
     std::string computeCode;
     try {
         openAndLoadShaderFile(finalComputePath, computeCode);
@@ -24,12 +23,10 @@ Shader::Shader(const char* computePath) {
 
 Shader::Shader(const char* vertexPath, const char* fragmentPath,
     const char* geoPath) {
-    const string shaderPath = "../../shaders/";
-
-    string finalVertexPath = shaderPath + vertexPath;
-    string finalFragmentPath = shaderPath + fragmentPath;
+    string finalVertexPath = SHADER_PATH + vertexPath;
+    string finalFragmentPath = SHADER_PATH + fragmentPath;
     string finalGeometryPath;
-    if (geoPath != nullptr) finalGeometryPath = shaderPath + geoPath;
+    if (geoPath != nullptr) finalGeometryPath = SHADER_PATH + geoPath;
 
     string vertexCode;
     string fragmentCode;

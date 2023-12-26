@@ -57,7 +57,7 @@ Mesh AssetConverter::convertBinaryToMesh(const std::string& path) {
     auto metadata = nlohmann::json::parse(file.json);
     auto bounds = metadata["bounds"].get<std::vector<float>>();
     size_t vertexBufferSize = metadata["vertex_buffer_size"];
-    size_t indexBufferSize = metadata["index_buffer_size"];
+    size_t indexBufferSize = metadata["indices_buffer_size"];
     size_t totalBufferSize = vertexBufferSize + indexBufferSize;
 
     Mesh mesh;
@@ -109,7 +109,7 @@ assets::AssetFile AssetConverter::convertTextureToBinary(Texture& texture) {
     textureMetadata["format"] = "RGBA8";
     textureMetadata["width"] = texture.width;
     textureMetadata["height"] = texture.height;
-    textureMetadata["nrCompoonents"] = texture.nrComponents;
+    textureMetadata["nrComponents"] = texture.nrComponents;
 
     // TODO: Change this to account for other texture formats (Not everything will be 8 bits per channel)
     int32_t textureBufferSize = texture.height * texture.width * texture.nrComponents;
@@ -152,4 +152,34 @@ Texture AssetConverter::convertBinaryToTexture(const std::string& path) {
     LZ4_decompress_safe(file.binaryBlob.data(), (char*)texture.data, file.binaryBlob.size(), textureBufferSize);
 
     return texture;
+}
+
+assets::AssetFile AssetConverter::convertModelAssetInfoToBinary(ModelAssetInfo& assetInfo) {
+    nlohmann::json model_metadata;
+    model_metadata["numMeshes"] = assetInfo.numMeshes;
+    model_metadata["numTextures"] = assetInfo.numTexture;
+
+    assets::AssetFile file;
+    file.type[0] = 'I';
+    file.type[1] = 'N';
+    file.type[2] = 'F';
+    file.type[3] = 'O';
+
+    file.version = 1;
+    file.json = model_metadata.dump();
+
+    return file;
+}
+
+ModelAssetInfo AssetConverter::convertBinaryToModelAssetInfo(const std::string& path) {
+    assets::AssetFile file;
+    assets::loadBinaryFile(path, file);
+
+    nlohmann::json model_metadata = nlohmann::json::parse(file.json);
+
+    ModelAssetInfo info;
+    info.numMeshes = model_metadata["numMeshes"];
+    info.numTexture = model_metadata["numTextures"];
+
+    return info;
 }

@@ -23,6 +23,7 @@ add_library(gl_tools STATIC
         assets/asset_converter.h
         assets/asset_file.cpp
         assets/asset_file.h
+        utils/paths.h
 )
 
 add_executable(demo
