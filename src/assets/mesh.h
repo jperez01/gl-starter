@@ -1,15 +1,11 @@
-#pragma once
-#include "utils/types.h"
+//
+// Created by jpabl on 12/27/2023.
+//
 
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-
-struct NodeData {
-    glm::mat4 transformation;
-    glm::mat4 originalTransform;
-    std::string name;
-    int parentIndex;
-};
+#ifndef MESH_H
+#define MESH_H
+#include <vector>
+#include <utils/types.h>
 
 struct Mesh {
     std::vector<Vertex> vertices;
@@ -17,19 +13,10 @@ struct Mesh {
 
     size_t materialIndex;
 
-    std::unordered_map<std::string, unsigned int> boneName_To_Index;
-    std::vector<VertexBoneData> bone_data;
-    std::vector<BoneInfo> bone_info;
-
     glm::mat4 model_matrix;
     BoundingBox aabb;
 
     AllocatedBuffer buffer;
-    unsigned int SSBO;
-
-    void getBoneTransforms(float time, const aiScene* scene, std::vector<NodeData>& nodeData, int animationIndex = 0);
-    const aiNodeAnim* findNodeAnim(const aiAnimation* animation, const std::string& nodeName);
-
-    aiVector3D calcInterpolatedTransform(float animationTicks, unsigned int numKeys, aiVectorKey* keys);
-    aiQuaternion calcInterpolatedRotation(float animationTicks, const aiNodeAnim* nodeAnim);
 };
+
+#endif //MESH_H

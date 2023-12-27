@@ -51,7 +51,8 @@ void Model::loadInfo(std::string path, FileType type) {
     }
     directory = path.substr(0, path.find_last_of('/'));
     numAnimations = scene->mNumAnimations;
-    materials_loaded.resize(scene->mNumMaterials);
+
+    processMaterials(scene);
 
     processNode(scene->mRootNode, scene);
     scene = importer.GetOrphanedScene();
@@ -123,7 +124,7 @@ void Model::processNode(aiNode* node, const aiScene* scene, int parentIndex) {
 
     NodeData data;
     data.name = std::string(node->mName.data);
-    data.originalTransform = convertMatrix(node->mTransformation);
+    data.originalTransform = convertToGlmMatrix(node->mTransformation);
     data.parentIndex = parentIndex;
     nodes.push_back(data);
     int index = nodes.size() - 1;
@@ -230,7 +231,7 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
             std::string bone_name(bone->mName.C_Str());
             nameToIndex[bone_name] = i;
 
-            boneInfo[i].offsetTransform = convertMatrix(bone->mOffsetMatrix);
+            boneInfo[i].offsetTransform = convertToGlmMatrix(bone->mOffsetMatrix);
             for (unsigned int j = 0; j < bone->mNumWeights; j++) {
                 auto&weight = bone->mWeights[j];
                 addBoneData(boneData[weight.mVertexId], i, weight.mWeight);
@@ -244,42 +245,6 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
             indices.push_back(face.mIndices[j]);
     }
     Mesh newMesh;
-
-    Material&loadedMaterial = materials_loaded.at(mesh->mMaterialIndex);
-    if (loadedMaterial.texture_paths.empty()) {
-        aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
-
-        std::vector<std::string> diffuseMaps = loadMaterialTextures(material,
-                                                                    aiTextureType_DIFFUSE, "texture_diffuse");
-        textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
-
-        std::vector<std::string> specularMaps = loadMaterialTextures(material,
-                                                                     aiTextureType_SPECULAR, "texture_specular");
-        textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
-
-        std::vector<std::string> normalMaps = loadMaterialTextures(material,
-                                                                   aiTextureType_NORMALS, "texture_normal");
-        textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
-
-        std::vector<std::string> heightMaps = loadMaterialTextures(material,
-                                                                   aiTextureType_AMBIENT, "texture_height");
-        textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
-
-        std::vector<std::string> aoMaps = loadMaterialTextures(material,
-                                                               aiTextureType_LIGHTMAP, "texture_ao");
-        textures.insert(textures.end(), aoMaps.begin(), aoMaps.end());
-
-        std::vector<std::string> metallicMaps = loadMaterialTextures(material,
-                                                                     aiTextureType_METALNESS, "texture_metallic");
-        textures.insert(textures.end(), metallicMaps.begin(), metallicMaps.end());
-
-        std::vector<std::string> roughnessMaps = loadMaterialTextures(material,
-                                                                      aiTextureType_DIFFUSE_ROUGHNESS,
-                                                                      "texture_roughness");
-        textures.insert(textures.end(), roughnessMaps.begin(), roughnessMaps.end());
-
-        loadedMaterial.texture_paths = textures;
-    }
     newMesh.materialIndex = mesh->mMaterialIndex;
 
     newMesh.aabb = someAABB;
@@ -287,11 +252,38 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene) {
     newMesh.indices = indices;
     newMesh.vertices = vertices;
 
-    newMesh.bone_data = boneData;
-    newMesh.bone_info = boneInfo;
-    newMesh.boneName_To_Index = nameToIndex;
+    Animation newAnimation;
+    newAnimation.bone_info = boneInfo;
+    newAnimation.bone_data = boneData;
+    newAnimation.boneName_To_Index = nameToIndex;
+    animations.push_back(newAnimation);
 
     return newMesh;
+}
+
+void Model::processMaterials(const aiScene* scene) {
+    std::vector<std::string> textures;
+    materials_loaded.resize(scene->mNumMaterials);
+
+    std::vector<std::pair<aiTextureType, std::string>> textureTypes = {
+        {aiTextureType_DIFFUSE, "texture_diffuse"},
+        {aiTextureType_SPECULAR, "texture_specular"},
+        {aiTextureType_NORMALS, "texture_normal"},
+        {aiTextureType_AMBIENT, "texture_height"},
+        {aiTextureType_LIGHTMAP, "texture_ao"},
+        {aiTextureType_METALNESS, "texture_metallic"},
+        {aiTextureType_DIFFUSE_ROUGHNESS, "texture_roughness"}
+    };
+
+    for (int i = 0; i < scene->mNumMaterials; i++) {
+        aiMaterial* material = scene->mMaterials[i];
+
+        for (auto& [aiTextureType, typeName] : textureTypes) {
+            auto foundTextures = loadMaterialTextures(material, aiTextureType, typeName);
+            textures.insert(textures.end(), foundTextures.begin(), foundTextures.end());
+        }
+        materials_loaded[i].texture_paths = textures;
+    }
 }
 
 std::vector<std::string> Model::loadMaterialTextures(aiMaterial* mat, aiTextureType type,
@@ -372,7 +364,7 @@ bool textureFromFile(const char* path, const std::string&directory, Texture&text
     }
 }
 
-glm::mat4 convertMatrix(const aiMatrix4x4&aiMat) {
+glm::mat4 convertToGlmMatrix(const aiMatrix4x4&aiMat) {
     return {
         aiMat.a1, aiMat.b1, aiMat.c1, aiMat.d1,
         aiMat.a2, aiMat.b2, aiMat.c2, aiMat.d2,

@@ -5,7 +5,7 @@
 #ifndef ASSET_CONVERTER_H
 #define ASSET_CONVERTER_H
 #include "asset_file.h"
-#include "mesh.h"
+#include "assets/mesh.h"
 
 struct ModelAssetInfo {
     int numMeshes = 0;
@@ -14,7 +14,7 @@ struct ModelAssetInfo {
 
 class AssetConverter {
 public:
-    assets::AssetFile convertMeshToBinary(Mesh&mesh);
+     assets::AssetFile convertMeshToBinary(Mesh&mesh);
     Mesh convertBinaryToMesh(const std::string&path);
 
     assets::AssetFile convertTextureToBinary(Texture&texture);
@@ -22,8 +22,6 @@ public:
 
     assets::AssetFile convertModelAssetInfoToBinary(ModelAssetInfo& assetInfo);
     ModelAssetInfo convertBinaryToModelAssetInfo(const std::string& path);
-private:
-    void unpackMeshData();
 };
 
 

@@ -17,13 +17,14 @@ add_library(gl_tools STATIC
     shader/shader.cpp
     shader/update_listener.cpp
         renderer/base_renderer.h
-        assets/mesh.cpp
-        assets/mesh.h
         assets/asset_converter.cpp
         assets/asset_converter.h
         assets/asset_file.cpp
         assets/asset_file.h
         utils/paths.h
+        assets/animation.cpp
+        assets/animation.h
+        assets/mesh.h
 )
 
 add_executable(demo

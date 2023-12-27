@@ -9,8 +9,9 @@
 #include <unordered_map>
 
 #include "asset_converter.h"
+#include "mesh.h"
 #include "utils/material.h"
-#include "assets/mesh.h"
+#include "assets/animation.h"
 
 enum FileType {
     GLTF = 0, OBJ
@@ -18,7 +19,7 @@ enum FileType {
 
 bool textureFromMemory(void* data, unsigned int bufferSize, Texture& texture);
 bool textureFromFile(const char *path, const std::string &directory, Texture& texture, bool gamma = false);
-glm::mat4 convertMatrix(const aiMatrix4x4& aiMat);
+glm::mat4 convertToGlmMatrix(const aiMatrix4x4& aiMat);
 
 class Model {
     public:
@@ -27,6 +28,7 @@ class Model {
         std::vector<NodeData> nodes;
 
         std::vector<Material> materials_loaded;
+        std::vector<Animation> animations;
 
         std::string directory;
         bool gammaCorrection;
@@ -47,6 +49,8 @@ class Model {
 
         void processNode(aiNode *node, const aiScene *scene, int parentIndex = -1);
         Mesh processMesh(aiMesh *mesh, const aiScene *scene);
+
+    void processMaterials(const aiScene *scene);
 
         void readNodeHierarchy(const aiNode* node, Mesh& mesh);
 

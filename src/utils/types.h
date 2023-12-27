@@ -70,8 +70,6 @@ struct VertexBoneData {
     float weights[MAX_BONES_PER_VERTEX] = {0.0f};
 };
 
-void addBoneData(VertexBoneData& data, unsigned int boneID, float weight);
-
 struct BoneInfo {
     glm::mat4 offsetTransform;
     glm::mat4 finalTransform;

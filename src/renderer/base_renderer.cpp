@@ -69,14 +69,13 @@ void BaseRenderer::drawModels(std::vector<Model>& models, Shader& shader, unsign
                 }
                 glActiveTexture(GL_TEXTURE0);
 
-                if (!mesh.bone_data.empty() && model.scene->mNumAnimations > 0) {
-                    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, mesh.SSBO);
+                Animation& currentAnimationData = model.animations[j];
+                if (!currentAnimationData.bone_data.empty() && model.scene->mNumAnimations > 0) {
+                    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, currentAnimationData.animationSSBO);
 
-                    mesh.getBoneTransforms(animationTime, model.scene, model.nodes, chosenAnimation);
-                    std::string boneString = "boneMatrices[";
-                    for (unsigned int i = 0; i < mesh.bone_info.size(); i++) {
-                        shader.setMat4(boneString + std::to_string(i) + "]",
-                            mesh.bone_info[i].finalTransform);
+                    auto finalTransforms = currentAnimationData.getBoneTransforms(animationTime, model.scene, model.nodes, chosenAnimation);
+                    for (unsigned int i = 0; i < finalTransforms.size(); i++) {
+                        shader.setMat4("boneMatrices[" + std::to_string(i) + "]", finalTransforms[i]);
                     }
                 }
             }
@@ -107,14 +106,11 @@ void BaseRenderer::loadModelData(Model& model) {
         }
     }
 
-    for (Mesh& mesh : model.meshes) {
-        std::vector<VertexType> endpoints = { POSITION, NORMAL, TEXCOORDS, TANGENT, BI_TANGENT, VERTEX_ID };
-        mesh.buffer = glutil::loadVertexBuffer(mesh.vertices, mesh.indices, endpoints);
-
-        if (!mesh.bone_data.empty() && model.scene->mNumAnimations > 0) {
-            glCreateBuffers(1, &mesh.SSBO);
-            glNamedBufferStorage(mesh.SSBO, sizeof(VertexBoneData) * mesh.bone_data.size(),
-                mesh.bone_data.data(), GL_DYNAMIC_STORAGE_BIT);
+    for (Animation& animationData: model.animations) {
+        if (!animationData.bone_data.empty() && model.scene->mNumAnimations > 0) {
+            glCreateBuffers(1, &animationData.animationSSBO);
+            glNamedBufferStorage(animationData.animationSSBO, sizeof(VertexBoneData) * animationData.bone_data.size(),
+                animationData.bone_data.data(), GL_DYNAMIC_STORAGE_BIT);
         }
     }
 }
