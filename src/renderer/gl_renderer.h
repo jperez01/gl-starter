@@ -15,5 +15,5 @@ private:
 
     Shader starterPipeline;
 
-    void GLRenderer::renderScene(std::vector<Model>& objs, Shader& shader, bool skipTextures);
+    void renderScene(std::vector<Model>& objs, Shader& shader, bool skipTextures);
 };
