@@ -43,7 +43,6 @@ target_include_directories(demo PUBLIC
 find_package(Threads REQUIRED)
 
 find_package(assimp CONFIG REQUIRED)
-set(EFSW_LIB "${PROJECT_SOURCE_DIR}/libs/efsw/efsw.lib")
 find_package(lz4 CONFIG REQUIRED)
 find_package(efsw CONFIG REQUIRED)
 
