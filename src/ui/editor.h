@@ -6,7 +6,7 @@
 #include "imgui/imgui_impl_opengl3.h"
 #include "imgui/imgui_impl_sdl.h"
 #include "imgui/imgui_stdlib.h"
-#include "ImGuizmo.h"
+#include "ImGuizmo/ImGuizmo.h"
 
 class BaseRenderer;
 

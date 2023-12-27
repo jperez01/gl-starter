@@ -32,6 +32,7 @@ add_executable(demo
 
 target_include_directories(gl_tools PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${PROJECT_SOURCE_DIR}/third_party
     ${PROJECT_SOURCE_DIR}/include)
 
 target_include_directories(demo PUBLIC 
