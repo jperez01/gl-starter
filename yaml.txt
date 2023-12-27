@@ -1,8 +1,0 @@
-elif: runner.os == 'Windows'
-      run: |
-        git clone https://github.com/microsoft/vcpkg
-        ./vcpkg/bootstrap-vcpkg.bat
-        vcpkg install esfw
-        vcpkg install lz4
-        vcpkg install assimp
-        vcpkg install sdl2
