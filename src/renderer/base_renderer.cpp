@@ -11,7 +11,7 @@
 #include "imgui/imgui_impl_opengl3.h"
 #include "imgui/imgui_impl_sdl.h"
 #include "imgui/imgui_stdlib.h"
-#include "ImGuizmo.h"
+#include "Imguizmo/ImGuizmo.h"
 
 void BaseRenderer::init_resources() {
     startTime = static_cast<float>(SDL_GetTicks());
