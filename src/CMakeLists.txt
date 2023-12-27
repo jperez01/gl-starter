@@ -39,6 +39,8 @@ target_include_directories(demo PUBLIC
     ${PROJECT_SOURCE_DIR}/include)
 
 # Libraries from vcpkg or other package manager
+find_package(Threads REQUIRED)
+
 find_package(assimp CONFIG REQUIRED)
 set(EFSW_LIB "${PROJECT_SOURCE_DIR}/libs/efsw/efsw.lib")
 find_package(lz4 CONFIG REQUIRED)
