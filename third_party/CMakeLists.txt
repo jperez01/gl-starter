@@ -1,6 +1,6 @@
 add_library(glad STATIC)
 target_sources(glad PRIVATE
-    glad/glad.c)
+    GLAD/glad.c)
 target_include_directories(glad PUBLIC ${PROJECT_SOURCE_DIR}/include)
 
 add_library(glm INTERFACE)
@@ -29,7 +29,7 @@ target_link_libraries(imgui PUBLIC SDL2::SDL2)
 
 add_library(imGuizmo STATIC)
 target_sources(imGuizmo PRIVATE
-    ImGuizmo/imGuizmo.h
-    ImGuizmo/imGuizmo.cpp)
+    ImGuizmo/ImGuizmo.h
+    ImGuizmo/ImGuizmo.cpp)
 target_include_directories(imGuizmo PUBLIC imGuizmo)
 target_link_libraries(imGuizmo PUBLIC imgui)
