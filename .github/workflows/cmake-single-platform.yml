@@ -29,7 +29,7 @@ jobs:
       run: |
         git clone https://github.com/microsoft/vcpkg
         ./vcpkg/bootstrap-vcpkg.sh
-        ./vcpkg/vcpkg install esfw
+        ./vcpkg/vcpkg install efsw
         ./vcpkg/vcpkg install lz4
         
         sudo apt update
