@@ -32,7 +32,7 @@ vcpkg install efsw
 vcpkg install lz4
 vcpkg install assimp
 vcpkg install sdl2
-vcpkg integrate install
+vcpkg integrate install (used for Visual Studio)
 ```
 #### Linux
 ```
