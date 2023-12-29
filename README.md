@@ -17,7 +17,7 @@ Some libraries are in the third_party folder and built along with the app:
 * [ImGui](https://github.com/ocornut/imgui) - editor UI
 * [ImGuizmo](https://github.com/CedricGuillemet/ImGuizmo) - Guizmo extension to ImGui
 
-To get these libraries, I recommend using [vcpkg](https://vcpkg.io/en/):
+To get the necessary libraries, I recommend using [vcpkg](https://vcpkg.io/en/):
 #### Windows
 ```
 git clone https://github.com/microsoft/vcpkg
