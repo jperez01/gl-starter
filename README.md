@@ -1,6 +1,8 @@
 # GL Starter
 Starter code for OpenGL projects in C++. I constantly had small demos that I wanted to make, but I wanted a framework to work off of instead of starting from scratch.
 
+![Windows Workflow](https://github.com/jperez01/gl-starter/tree/main/.github/workflows/windows.yaml/badge.svg)
+
 ## Features
 * Abstractions for basic graphics primitives like texture, framebuffer, mesh, etc.
 * Guizmo tool for transforming objects in a scene.
