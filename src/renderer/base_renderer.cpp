@@ -106,6 +106,11 @@ void BaseRenderer::loadModelData(Model& model) {
         }
     }
 
+    for (Mesh& mesh : model.meshes) {
+        std::vector<VertexType> endpoints = { POSITION, NORMAL, TEXCOORDS, TANGENT, BI_TANGENT, VERTEX_ID };
+        mesh.buffer = glutil::loadVertexBuffer(mesh.vertices, mesh.indices, endpoints);
+    }
+
     for (Animation& animationData: model.animations) {
         if (!animationData.bone_data.empty() && model.scene->mNumAnimations > 0) {
             glCreateBuffers(1, &animationData.animationSSBO);
