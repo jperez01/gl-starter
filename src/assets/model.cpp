@@ -21,12 +21,14 @@ Model::Model(std::string path, FileType type) {
     std::string assetFolderPath = ASSET_PATH + nameOfModel;
     if (std::filesystem::exists(assetFolderPath)) {
         loadFromAsset(assetFolderPath);
-    }
-    else {
+    } else {
         std::string normalObjectPath = OBJECT_PATH + path;
         loadInfo(normalObjectPath, type);
 
-        saveToAsset(assetFolderPath);
+        if (std::filesystem::exists(ASSET_PATH))
+        {
+            saveToAsset(assetFolderPath);
+        }
     }
     auto endTime = std::chrono::high_resolution_clock::now();
     double elapsedTime = std::chrono::duration<double, std::milli>(endTime - startTime).count();

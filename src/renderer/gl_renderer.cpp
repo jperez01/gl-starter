@@ -9,7 +9,7 @@ void GLRenderer::init_resources() {
     starterPipeline = Shader("default/default.vs", "default/default.fs");
 
     planeBuffer = glutil::createPlane();
-    planeTexture = glutil::loadTexture("../../resources/textures/wood.png");
+    planeTexture = glutil::loadTexture("../resources/textures/wood.png");
 
     screenQuad.init();
 }
