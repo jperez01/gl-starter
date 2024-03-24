@@ -7,5 +7,6 @@
 /.idea
 /cmake-build-debug-visual-studio
 /cmake-build-release-visual-studio
+/cmake-build-relwithdebinfo-visual-studio
 /CMakeSettings.json
 /vcpkg_installed
